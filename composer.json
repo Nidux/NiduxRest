@@ -1,0 +1,36 @@
+{
+  "name": "nidux/niduxrest-php",
+  "description": "Niduxrest PHP",
+  "keywords": [
+    "rest",
+    "curl",
+    "http",
+    "https",
+    "client"
+  ],
+  "type": "library",
+  "homepage": "https://github.com/Nidux/NiduxRest",
+  "license": "MIT",
+  "require": {
+    "php": ">=5.4.0",
+    "ext-curl": "*",
+    "ext-json": "*"
+  },
+  "suggest": {
+    "ext-json": "Allows using JSON Bodies for sending and parsing requests"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.0"
+  },
+  "autoload": {
+    "psr-0": {
+      "Niduxrest\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/Niduxrest",
+      "Niduxrest\\": "src/"
+    }
+  }
+}
