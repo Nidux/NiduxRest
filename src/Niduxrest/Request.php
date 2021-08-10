@@ -570,8 +570,13 @@ class Request
             $query = '?' . http_build_query(self::getArrayFromQuerystring($query));
         }
 
-        if ($port && $port[0] !== ':') {
-            $port = ':' . $port;
+        if (null !== $port) {
+            if (!is_string($port)) {
+                $port = strval($port);
+            }
+            if ($port[0] !== ':') {
+                $port = ':' . $port;
+            }
         }
 
         return $scheme . $host . $port . $path . $query;
