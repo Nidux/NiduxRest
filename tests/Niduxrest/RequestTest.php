@@ -500,6 +500,17 @@ class RequestTest extends TestCase
         $this->assertEquals('This is a test', $response->body->postData->params->file);
     }
 
+    public function testNamedURLWithPort()
+    {
+
+        $response = Request::post('https://www.facturar.cr:1391', [
+            'Accept' => 'application/json',
+        ]);
+
+        $this->assertEquals(200, $response->code);
+        print_r($response);
+    }
+
     public function testUploadWithoutHelper()
     {
         $fixture = __DIR__ . '/../fixtures/upload.txt';

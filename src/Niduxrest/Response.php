@@ -10,10 +10,10 @@ class Response
     public $headers;
 
     /**
-     * @param int $code response code of the cURL request
-     * @param string $raw_body the raw body of the cURL response
-     * @param string $headers raw header string from cURL response
-     * @param array $json_args arguments to pass to json_decode function
+     * @param int    $code      response code of the cURL request
+     * @param string $raw_body  the raw body of the cURL response
+     * @param string $headers   raw header string from cURL response
+     * @param array  $json_args arguments to pass to json_decode function
      */
     public function __construct($code, $raw_body, $headers, $json_args = [])
     {
@@ -39,7 +39,9 @@ class Response
      *
      * thanks to ricardovermeltfoort@gmail.com
      * http://php.net/manual/en/function.http-parse-headers.php#112986
+     *
      * @param string $raw_headers raw headers
+     *
      * @return array
      */
     private function parseHeaders($raw_headers): array
@@ -57,9 +59,9 @@ class Response
                     if (!isset($headers[$h[0]])) {
                         $headers[$h[0]] = trim($h[1]);
                     } else if (is_array($headers[$h[0]])) {
-                        $headers[$h[0]] = array_merge($headers[$h[0]], [trim($h[1])]);
+                        $headers[$h[0]] = array_merge($headers[$h[0]], [ trim($h[1]) ]);
                     } else {
-                        $headers[$h[0]] = array_merge([$headers[$h[0]]], [trim($h[1])]);
+                        $headers[$h[0]] = array_merge([ $headers[$h[0]] ], [ trim($h[1]) ]);
                     }
 
                     $key = $h[0];

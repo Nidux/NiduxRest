@@ -37,20 +37,22 @@ class Request
     /**
      * Set JSON decode mode
      *
-     * @param bool $assoc When TRUE, returned objects will be converted into associative arrays.
-     * @param integer $depth User specified recursion depth.
+     * @param bool    $assoc   When TRUE, returned objects will be converted into associative arrays.
+     * @param integer $depth   User specified recursion depth.
      * @param integer $options Bitmask of JSON decode options. Currently only JSON_BIGINT_AS_STRING is supported (default is to cast large integers as floats)
+     *
      * @return array
      */
     public static function jsonOpts($assoc = false, $depth = 512, $options = 0)
     {
-        return self::$jsonOpts = [$assoc, $depth, $options];
+        return self::$jsonOpts = [ $assoc, $depth, $options ];
     }
 
     /**
      * Verify SSL peer
      *
      * @param bool $enabled enable SSL verification, by default is true
+     *
      * @return bool
      */
     public static function verifyPeer($enabled)
@@ -62,6 +64,7 @@ class Request
      * Verify SSL host
      *
      * @param bool $enabled enable SSL host verification, by default is true
+     *
      * @return bool
      */
     public static function verifyHost($enabled)
@@ -73,6 +76,7 @@ class Request
      * Set a timeout
      *
      * @param integer $seconds timeout value in seconds
+     *
      * @return integer
      */
     public static function timeout($seconds)
@@ -84,6 +88,7 @@ class Request
      * Set default headers to send on every request
      *
      * @param array $headers headers array
+     *
      * @return array
      */
     public static function defaultHeaders($headers)
@@ -94,8 +99,9 @@ class Request
     /**
      * Set a new default header to send on every request
      *
-     * @param string $name header name
+     * @param string $name  header name
      * @param string $value header value
+     *
      * @return string
      */
     public static function defaultHeader($name, $value)
@@ -115,6 +121,7 @@ class Request
      * Set curl options to send on every request
      *
      * @param array $options options array
+     *
      * @return array
      */
     public static function curlOpts($options)
@@ -125,8 +132,9 @@ class Request
     /**
      * Set a new default header to send on every request
      *
-     * @param string $name header name
+     * @param string $name  header name
      * @param string $value header value
+     *
      * @return string
      */
     public static function curlOpt($name, $value)
@@ -150,6 +158,7 @@ class Request
      *       Be aware of which key you are using and do not share your Production key.
      *
      * @param string $key Mashape key
+     *
      * @return string
      */
     public static function setMashapeKey($key): string
@@ -162,6 +171,7 @@ class Request
      * Obtain your Mashape key by browsing one of your Mashape applications on https://www.mashape.com
      *
      * @param string $bearerToken "bearer Token"
+     *
      * @return string
      */
     public static function setBearerToken($bearerToken): string
@@ -194,9 +204,9 @@ class Request
     /**
      * Set authentication method to use
      *
-     * @param string $username authentication username
-     * @param string $password authentication password
-     * @param integer $method authentication method
+     * @param string  $username authentication username
+     * @param string  $password authentication password
+     * @param integer $method   authentication method
      */
     public static function auth($username = '', $password = '', $method = CURLAUTH_BASIC)
     {
@@ -208,10 +218,10 @@ class Request
     /**
      * Set proxy to use
      *
-     * @param string $address proxy address
-     * @param integer $port proxy port
-     * @param integer $type (Available options for this are CURLPROXY_HTTP, CURLPROXY_HTTP_1_0 CURLPROXY_SOCKS4, CURLPROXY_SOCKS5, CURLPROXY_SOCKS4A and CURLPROXY_SOCKS5_HOSTNAME)
-     * @param bool $tunnel enable/disable tunneling
+     * @param string  $address proxy address
+     * @param integer $port    proxy port
+     * @param integer $type    (Available options for this are CURLPROXY_HTTP, CURLPROXY_HTTP_1_0 CURLPROXY_SOCKS4, CURLPROXY_SOCKS5, CURLPROXY_SOCKS4A and CURLPROXY_SOCKS5_HOSTNAME)
+     * @param bool    $tunnel  enable/disable tunneling
      */
     public static function proxy($address, $port = 1080, $type = CURLPROXY_HTTP, $tunnel = false)
     {
@@ -224,9 +234,9 @@ class Request
     /**
      * Set proxy authentication method to use
      *
-     * @param string $username authentication username
-     * @param string $password authentication password
-     * @param integer $method authentication method
+     * @param string  $username authentication username
+     * @param string  $password authentication password
+     * @param integer $method   authentication method
      */
     public static function proxyAuth($username = '', $password = '', $method = CURLAUTH_BASIC)
     {
@@ -238,26 +248,29 @@ class Request
     /**
      * Send a GET request to a URL
      *
-     * @param string $url URL to send the GET request to
-     * @param array $headers additional headers to send
-     * @param mixed $parameters parameters to send in the querystring
-     * @param string $username Authentication username (deprecated)
-     * @param string $password Authentication password (deprecated)
+     * @param string $url        URL to send the GET request to
+     * @param array  $headers    additional headers to send
+     * @param mixed  $parameters parameters to send in the querystring
+     * @param string $username   Authentication username (deprecated)
+     * @param string $password   Authentication password (deprecated)
+     *
      * @return Response
      * @throws Exception
      */
     public static function get($url, $headers = [], $parameters = null, $username = null, $password = null): Response
     {
-        return self::send(Method::GET, $url, $parameters, $headers, $username, $password);
+        return self::send(Method::GET, trim($url), $parameters, $headers, $username, $password);
     }
 
     /**
      * Send a HEAD request to a URL
-     * @param string $url URL to send the HEAD request to
-     * @param array $headers additional headers to send
-     * @param mixed $parameters parameters to send in the querystring
-     * @param string $username Basic Authentication username (deprecated)
-     * @param string $password Basic Authentication password (deprecated)
+     *
+     * @param string $url        URL to send the HEAD request to
+     * @param array  $headers    additional headers to send
+     * @param mixed  $parameters parameters to send in the querystring
+     * @param string $username   Basic Authentication username (deprecated)
+     * @param string $password   Basic Authentication password (deprecated)
+     *
      * @return Response
      * @throws Exception
      */
@@ -268,11 +281,13 @@ class Request
 
     /**
      * Send a OPTIONS request to a URL
-     * @param string $url URL to send the OPTIONS request to
-     * @param array $headers additional headers to send
-     * @param mixed $parameters parameters to send in the querystring
-     * @param string $username Basic Authentication username
-     * @param string $password Basic Authentication password
+     *
+     * @param string $url        URL to send the OPTIONS request to
+     * @param array  $headers    additional headers to send
+     * @param mixed  $parameters parameters to send in the querystring
+     * @param string $username   Basic Authentication username
+     * @param string $password   Basic Authentication password
+     *
      * @return Response
      * @throws Exception
      */
@@ -283,11 +298,13 @@ class Request
 
     /**
      * Send a CONNECT request to a URL
-     * @param string $url URL to send the CONNECT request to
-     * @param array $headers additional headers to send
-     * @param mixed $parameters parameters to send in the querystring
-     * @param string $username Basic Authentication username (deprecated)
-     * @param string $password Basic Authentication password (deprecated)
+     *
+     * @param string $url        URL to send the CONNECT request to
+     * @param array  $headers    additional headers to send
+     * @param mixed  $parameters parameters to send in the querystring
+     * @param string $username   Basic Authentication username (deprecated)
+     * @param string $password   Basic Authentication password (deprecated)
+     *
      * @return Response
      * @throws Exception
      */
@@ -298,11 +315,13 @@ class Request
 
     /**
      * Send POST request to a URL
-     * @param string $url URL to send the POST request to
-     * @param array $headers additional headers to send
-     * @param mixed $body POST body data
+     *
+     * @param string $url      URL to send the POST request to
+     * @param array  $headers  additional headers to send
+     * @param mixed  $body     POST body data
      * @param string $username Basic Authentication username (deprecated)
      * @param string $password Basic Authentication password (deprecated)
+     *
      * @return Response response
      * @throws Exception
      */
@@ -313,11 +332,13 @@ class Request
 
     /**
      * Send DELETE request to a URL
-     * @param string $url URL to send the DELETE request to
-     * @param array $headers additional headers to send
-     * @param mixed $body DELETE body data
+     *
+     * @param string $url      URL to send the DELETE request to
+     * @param array  $headers  additional headers to send
+     * @param mixed  $body     DELETE body data
      * @param string $username Basic Authentication username (deprecated)
      * @param string $password Basic Authentication password (deprecated)
+     *
      * @return Response
      * @throws Exception
      */
@@ -328,11 +349,13 @@ class Request
 
     /**
      * Send PUT request to a URL
-     * @param string $url URL to send the PUT request to
-     * @param array $headers additional headers to send
-     * @param mixed $body PUT body data
+     *
+     * @param string $url      URL to send the PUT request to
+     * @param array  $headers  additional headers to send
+     * @param mixed  $body     PUT body data
      * @param string $username Basic Authentication username (deprecated)
      * @param string $password Basic Authentication password (deprecated)
+     *
      * @return Response
      * @throws Exception
      */
@@ -343,11 +366,13 @@ class Request
 
     /**
      * Send PATCH request to a URL
-     * @param string $url URL to send the PATCH request to
-     * @param array $headers additional headers to send
-     * @param mixed $body PATCH body data
+     *
+     * @param string $url      URL to send the PATCH request to
+     * @param array  $headers  additional headers to send
+     * @param mixed  $body     PATCH body data
      * @param string $username Basic Authentication username (deprecated)
      * @param string $password Basic Authentication password (deprecated)
+     *
      * @return Response
      * @throws Exception
      */
@@ -358,11 +383,13 @@ class Request
 
     /**
      * Send TRACE request to a URL
-     * @param string $url URL to send the TRACE request to
-     * @param array $headers additional headers to send
-     * @param mixed $body TRACE body data
+     *
+     * @param string $url      URL to send the TRACE request to
+     * @param array  $headers  additional headers to send
+     * @param mixed  $body     TRACE body data
      * @param string $username Basic Authentication username (deprecated)
      * @param string $password Basic Authentication password (deprecated)
+     *
      * @return Response
      * @throws Exception
      */
@@ -374,11 +401,13 @@ class Request
     /**
      * This function is useful for serializing multidimensional arrays, and avoid getting
      * the 'Array to string conversion' notice
-     * @param array|object $data array to flatten.
-     * @param bool|string $parent parent key or false if no parent
+     *
+     * @param array|object $data   array to flatten.
+     * @param bool|string  $parent parent key or false if no parent
+     *
      * @return array
      */
-    public static function buildHTTPCurlQuery($data, $parent = false)
+    public static function buildHTTPCurlQuery($data, $parent = false): array
     {
         $result = [];
 
@@ -405,12 +434,14 @@ class Request
 
     /**
      * Send a cURL request
-     * @param Method|string $method HTTP method to use
-     * @param string $url URL to send the request to
-     * @param mixed $body request body
-     * @param array $headers additional headers to send
-     * @param string $username Authentication username (deprecated)
-     * @param string $password Authentication password (deprecated)
+     *
+     * @param Method|string $method   HTTP method to use
+     * @param string        $url      URL to send the request to
+     * @param mixed         $body     request body
+     * @param array         $headers  additional headers to send
+     * @param string        $username Authentication username (deprecated)
+     * @param string        $password Authentication password (deprecated)
+     *
      * @return Response
      * @throws Exception if a cURL error occurs
      */
@@ -553,7 +584,9 @@ class Request
 
     /**
      * Ensure that a URL is encoded and safe to use with cURL
+     *
      * @param string $url URL to encode
+     *
      * @return string
      */
     private static function encodeUrl($url): string
@@ -562,22 +595,17 @@ class Request
 
         $scheme = $url_parsed['scheme'] . '://';
         $host = $url_parsed['host'];
-        $port = ($url_parsed['port'] ?? null);
+        $port = (strval($url_parsed['port'] ?? null));
         $path = ($url_parsed['path'] ?? null);
         $query = ($url_parsed['query'] ?? null);
-
         if ($query !== null) {
             $query = '?' . http_build_query(self::getArrayFromQuerystring($query));
         }
 
-        if (null !== $port) {
-            if (!is_string($port)) {
-                $port = strval($port);
-            }
-            if ($port[0] !== ':') {
-                $port = ':' . $port;
-            }
+        if ($port) {
+            $port = ':' . $port;
         }
+
 
         return $scheme . $host . $port . $path . $query;
     }
@@ -591,6 +619,7 @@ class Request
     /**
      * @param array $existing_options
      * @param array $new_options
+     *
      * @return array
      */
     private static function mergeCurlOptions(&$existing_options, $new_options): array
