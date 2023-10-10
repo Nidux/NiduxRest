@@ -49,6 +49,20 @@ class Request
         self::$jsonOpts = [$assoc, $depth, $options];
     }
 
+
+
+    /**
+     * When true, disables both flags for host and peer verification at once
+     * @param bool $ignoreFlags
+     * @return void
+     */
+    public static function setSecurityFlagsOnConnection(bool $ignoreFlags = false): void
+    {
+        self::$verifyPeer = !$ignoreFlags;
+        self::$verifyHost = !$ignoreFlags;
+    }
+
+
     /**
      * Verify SSL peer
      *
@@ -59,6 +73,8 @@ class Request
     {
         self::$verifyPeer = $enabled;
     }
+
+
 
     /**
      * Verify SSL host
@@ -623,4 +639,170 @@ class Request
     {
         return self::$jsonOpts;
     }
+
+
+    /** Deprecated section to be removed on version 2.1 */
+
+    /**
+     * @deprecated Use setJsonOpts instead
+     * @param bool $assoc
+     * @param int $depth
+     * @param int $options
+     * @return void
+     */
+    public static function jsonOpts(bool $assoc = false, int $depth = 512, int $options = 0): void
+    {
+        self::setJsonOpts($assoc, $depth , $options);
+    }
+
+    /**
+     * @deprecated Use setVerifyPeer instead
+     * @param bool $enabled
+     * @return void
+     */
+    public static function verifyPeer(bool $enabled): void
+    {
+        self::setVerifyPeer($enabled);
+    }
+
+    /**
+     * @deprecated Use setVerifyHost instead
+     * @param bool $enabled
+     * @return void
+     */
+    public static function verifyHost(bool $enabled): void
+    {
+        self::setVerifyHost($enabled);
+    }
+
+    /**
+     * @deprecated
+     * Set a timeout
+     *
+     * @param int|null $seconds timeout value in seconds
+     *
+     */
+    public static function timeout(int|null $seconds): void
+    {
+        self::setTimeout($seconds);
+    }
+
+    /**
+     * @deprecated
+     * Set default headers to send on every request
+     *
+     * @param array $headers headers array
+     *
+     */
+    public static function defaultHeaders(array $headers): void
+    {
+        self::setDefaultHeaders($headers);
+    }
+
+    /**
+     * @deprecated
+     * Set a new default header to send on every request
+     *
+     * @param string $name header name
+     * @param string $value header value
+     *
+     */
+    public static function defaultHeader($name, $value): void
+    {
+        self::setIndidualDefaultHeader($name, $value);
+    }
+
+
+    /**
+     * @deprecated
+     * Set curl options to send on every request
+     *
+     * @param array $options options array
+     *
+     */
+    public static function curlOpts(array $options): void
+    {
+        self::setCurlOpts($options);
+    }
+
+    /**
+     * @deprecated
+     * Set a new default header to send on every request
+     *
+     * @param string $name header name
+     * @param string $value header value
+     *
+     */
+    public static function curlOpt($name, $value): void
+    {
+        self::setIndividualCurlOpt($name, $value);
+    }
+
+
+
+
+    /**
+     * @deprecated
+     * Set a cookie string for enabling cookie handling
+     *
+     * @param string $cookie
+     */
+    public static function cookie(string $cookie)
+    {
+        self::setCookie($cookie);
+    }
+
+    /**
+     * @deprecated
+     * Set a cookie file path for enabling cookie handling
+     *
+     * $cookieFile must be a correct path with write permission
+     *
+     * @param string $cookieFile - path to file for saving cookie
+     */
+    public static function cookieFile(string $cookieFile)
+    {
+        self::setCookieFile($cookieFile);
+    }
+
+    /**
+     * @deprecated
+     * Set authentication method to use
+     *
+     * @param string $username authentication username
+     * @param string $password authentication password
+     * @param integer $method authentication method
+     */
+    public static function auth($username = '', $password = '', $method = CURLAUTH_BASIC)
+    {
+        self::setAuthenticationMethod($username, $password, $method);
+    }
+
+    /**
+     * @deprecated
+     * Set proxy to use
+     *
+     * @param string $address proxy address
+     * @param integer $port proxy port
+     * @param integer $type (Available options for this are CURLPROXY_HTTP, CURLPROXY_HTTP_1_0 CURLPROXY_SOCKS4, CURLPROXY_SOCKS5, CURLPROXY_SOCKS4A and CURLPROXY_SOCKS5_HOSTNAME)
+     * @param bool $tunnel enable/disable tunneling
+     */
+    public static function proxy($address, $port = 1080, $type = CURLPROXY_HTTP, $tunnel = false)
+    {
+        self::setProxy($address, $port, $type, $tunnel);
+    }
+
+    /**
+     * @deprecated
+     * Set proxy authentication method to use
+     *
+     * @param string $username authentication username
+     * @param string $password authentication password
+     * @param integer $method authentication method
+     */
+    public static function proxyAuth($username = '', $password = '', $method = CURLAUTH_BASIC)
+    {
+        self::setProxyAuthentication($username, $password, $method);
+    }
+
 }
