@@ -4,29 +4,31 @@ namespace Niduxrest;
 
 class Response
 {
-    public $code;
-    public $raw_body;
-    public $body;
-    public $headers;
+    private int $code;
+    private string $raw_body;
+    private mixed $body;
+    private array $headers;
 
     /**
-     * @param int    $code      response code of the cURL request
-     * @param string $raw_body  the raw body of the cURL response
-     * @param string $headers   raw header string from cURL response
-     * @param array  $json_args arguments to pass to json_decode function
+     * @param int $code response code of the cURL request
+     * @param string $raw_body the raw body of the cURL response
+     * @param string $headers raw header string from cURL response
+     * @param array $overrideJsonOpts arguments to pass to json_decode function
      */
-    public function __construct($code, $raw_body, $headers, $json_args = [])
+    public function __construct(int $code, string $raw_body, string $headers, array $overrideJsonOpts = [])
     {
         $this->code = $code;
         $this->headers = $this->parseHeaders($headers);
         $this->raw_body = $raw_body;
         $this->body = $raw_body;
 
+        //Take the static var just to honor any global definitions
+        $overrideJsonOpts = (empty($overrideJsonOpts)) ? Request::getJsonOpts() : [];
         // make sure raw_body is the first argument
-        array_unshift($json_args, $raw_body);
+        array_unshift($overrideJsonOpts, $raw_body);
 
         if (function_exists('json_decode')) {
-            $json = call_user_func_array('json_decode', $json_args);
+            $json = call_user_func_array('json_decode', $overrideJsonOpts);
 
             if (json_last_error() === JSON_ERROR_NONE) {
                 $this->body = $json;
@@ -44,7 +46,7 @@ class Response
      *
      * @return array
      */
-    private function parseHeaders($raw_headers): array
+    private function parseHeaders(string $raw_headers): array
     {
         if (function_exists('http_parse_headers')) {
             return http_parse_headers($raw_headers);
@@ -59,14 +61,14 @@ class Response
                     if (!isset($headers[$h[0]])) {
                         $headers[$h[0]] = trim($h[1]);
                     } else if (is_array($headers[$h[0]])) {
-                        $headers[$h[0]] = array_merge($headers[$h[0]], [ trim($h[1]) ]);
+                        $headers[$h[0]] = array_merge($headers[$h[0]], [trim($h[1])]);
                     } else {
-                        $headers[$h[0]] = array_merge([ $headers[$h[0]] ], [ trim($h[1]) ]);
+                        $headers[$h[0]] = array_merge([$headers[$h[0]]], [trim($h[1])]);
                     }
 
                     $key = $h[0];
                 } else {
-                    if (substr($h[0], 0, 1) == "\t") {
+                    if (str_starts_with($h[0], "\t")) {
                         $headers[$key] .= "\r\n\t" . trim($h[0]);
                     } else if (!$key) {
                         $headers[0] = trim($h[0]);
@@ -77,4 +79,25 @@ class Response
             return $headers;
         }
     }
+
+    public function getCode(): int
+    {
+        return $this->code;
+    }
+
+    public function getRawBody(): string
+    {
+        return $this->raw_body;
+    }
+
+    public function getBody(): mixed
+    {
+        return $this->body;
+    }
+
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+
 }

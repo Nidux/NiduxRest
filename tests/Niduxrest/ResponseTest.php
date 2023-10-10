@@ -11,25 +11,35 @@ class ResponseTest extends TestCase
 {
     public function testJSONAssociativeArrays()
     {
-        $opts = Request::jsonOpts(true);
-        $response = new Response(200, '{"a":1,"b":2,"c":3,"d":4,"e":5}', '', $opts);
+        Request::setJsonOpts(true);
+        $response = new Response(200, '{"a":1,"b":2,"c":3,"d":4,"e":5}', '');
 
-        $this->assertEquals(1, $response->body['a']);
+        $this->assertEquals(1, $response->getBody()['a']);
+    }
+
+    public function testHeaderResponse()
+    {
+        $response = Request::get("https://enk7njbsi58p1xd.m.pipedream.net");
+        $headers = $response->getHeaders();
+
+        $this->assertNotEmpty($headers);
+        $this->assertIsArray($headers);
+        $this->assertEquals('application/json; charset=utf-8', $headers['content-type']);
     }
 
     public function testJSONAObjects()
     {
-        $opts = Request::jsonOpts(false);
-        $response = new Response(200, '{"a":1,"b":2,"c":3,"d":4,"e":5}', '', $opts);
+        Request::setJsonOpts(false);
+        $response = new Response(200, '{"a":1,"b":2,"c":3,"d":4,"e":5}', '');
 
-        $this->assertEquals(1, $response->body->a);
+        $this->assertEquals(1, $response->getBody()->a);
     }
 
     public function testJSONOpts()
     {
-        $opts = Request::jsonOpts(false, 512, JSON_NUMERIC_CHECK);
-        $response = new Response(200, '{"number": 1234567890}', '', $opts);
+        Request::setJsonOpts(false, 512, JSON_NUMERIC_CHECK);
+        $response = new Response(200, '{"number": 1234567890}', '');
 
-        $this->assertSame($response->body->number, 1234567890);
+        $this->assertSame($response->getBody()->number, 1234567890);
     }
 }

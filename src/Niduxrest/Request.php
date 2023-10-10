@@ -3,26 +3,28 @@
 namespace Niduxrest;
 
 use CURLFile;
+use CurlHandle;
+use Niduxrest\Enum\Method;
 
 class Request
 {
     private static $cookie = null;
     private static $cookieFile = null;
-    private static $curlOpts = [];
-    private static $defaultHeaders = [];
-    private static $handle = null;
-    private static $jsonOpts = [];
+    private static array $curlOpts = [];
+    private static array $defaultHeaders = [];
+    private static CurlHandle|null $handle = null;
+    private static array $jsonOpts = [];
     private static $socketTimeout = null;
-    private static $verifyPeer = true;
-    private static $verifyHost = true;
+    private static bool $verifyPeer = true;
+    private static bool $verifyHost = true;
 
-    private static $auth = [
+    private static array $auth = [
         'user' => '',
         'pass' => '',
         'method' => CURLAUTH_BASIC,
     ];
 
-    private static $proxy = [
+    private static array $proxy = [
         'port' => false,
         'tunnel' => false,
         'address' => false,
@@ -37,15 +39,14 @@ class Request
     /**
      * Set JSON decode mode
      *
-     * @param bool    $assoc   When TRUE, returned objects will be converted into associative arrays.
-     * @param integer $depth   User specified recursion depth.
+     * @param bool $assoc When TRUE, returned objects will be converted into associative arrays.
+     * @param integer $depth User specified recursion depth.
      * @param integer $options Bitmask of JSON decode options. Currently only JSON_BIGINT_AS_STRING is supported (default is to cast large integers as floats)
      *
-     * @return array
      */
-    public static function jsonOpts($assoc = false, $depth = 512, $options = 0)
+    public static function setJsonOpts(bool $assoc = false, int $depth = 512, int $options = 0): void
     {
-        return self::$jsonOpts = [ $assoc, $depth, $options ];
+        self::$jsonOpts = [$assoc, $depth, $options];
     }
 
     /**
@@ -53,11 +54,10 @@ class Request
      *
      * @param bool $enabled enable SSL verification, by default is true
      *
-     * @return bool
      */
-    public static function verifyPeer($enabled)
+    public static function setVerifyPeer(bool $enabled): void
     {
-        return self::$verifyPeer = $enabled;
+        self::$verifyPeer = $enabled;
     }
 
     /**
@@ -65,23 +65,21 @@ class Request
      *
      * @param bool $enabled enable SSL host verification, by default is true
      *
-     * @return bool
      */
-    public static function verifyHost($enabled)
+    public static function setVerifyHost(bool $enabled): void
     {
-        return self::$verifyHost = $enabled;
+        self::$verifyHost = $enabled;
     }
 
     /**
      * Set a timeout
      *
-     * @param integer $seconds timeout value in seconds
+     * @param int|null $seconds timeout value in seconds
      *
-     * @return integer
      */
-    public static function timeout($seconds)
+    public static function setTimeout(int|null $seconds): void
     {
-        return self::$socketTimeout = $seconds;
+        self::$socketTimeout = $seconds;
     }
 
     /**
@@ -89,32 +87,30 @@ class Request
      *
      * @param array $headers headers array
      *
-     * @return array
      */
-    public static function defaultHeaders($headers)
+    public static function setDefaultHeaders(array $headers): void
     {
-        return self::$defaultHeaders = array_merge(self::$defaultHeaders, $headers);
+        self::$defaultHeaders = array_merge(self::$defaultHeaders, $headers);
     }
 
     /**
      * Set a new default header to send on every request
      *
-     * @param string $name  header name
+     * @param string $name header name
      * @param string $value header value
      *
-     * @return string
      */
-    public static function defaultHeader($name, $value)
+    public static function setIndidualDefaultHeader($name, $value): void
     {
-        return self::$defaultHeaders[$name] = $value;
+        self::$defaultHeaders[$name] = $value;
     }
 
     /**
      * Clear all the default headers
      */
-    public static function clearDefaultHeaders()
+    public static function clearDefaultHeaders(): void
     {
-        return self::$defaultHeaders = [];
+        self::$defaultHeaders = [];
     }
 
     /**
@@ -122,32 +118,30 @@ class Request
      *
      * @param array $options options array
      *
-     * @return array
      */
-    public static function curlOpts($options)
+    public static function setCurlOpts(array $options): void
     {
-        return self::mergeCurlOptions(self::$curlOpts, $options);
+        self::mergeCurlOptions(self::$curlOpts, $options);
     }
 
     /**
      * Set a new default header to send on every request
      *
-     * @param string $name  header name
+     * @param string $name header name
      * @param string $value header value
      *
-     * @return string
      */
-    public static function curlOpt($name, $value)
+    public static function setIndividualCurlOpt($name, $value): void
     {
-        return self::$curlOpts[$name] = $value;
+        self::$curlOpts[$name] = $value;
     }
 
     /**
      * Clear all the default headers
      */
-    public static function clearCurlOpts()
+    public static function clearCurlOpts(): void
     {
-        return self::$curlOpts = [];
+        self::$curlOpts = [];
     }
 
     /**
@@ -159,24 +153,21 @@ class Request
      *
      * @param string $key Mashape key
      *
-     * @return string
      */
-    public static function setMashapeKey($key): string
+    public static function setMashapeKey(string $key): void
     {
-        return self::defaultHeader('X-Mashape-Key', $key);
+        self::setIndidualDefaultHeader('X-Mashape-Key', $key);
     }
 
     /**
      * Set a bearer token for your request
-     * Obtain your Mashape key by browsing one of your Mashape applications on https://www.mashape.com
      *
      * @param string $bearerToken "bearer Token"
      *
-     * @return string
      */
-    public static function setBearerToken($bearerToken): string
+    public static function setBearerToken(string $bearerToken): void
     {
-        return self::defaultHeader('Authorization', "Bearer " . $bearerToken);
+        self::setIndidualDefaultHeader('Authorization', "Bearer " . $bearerToken);
     }
 
     /**
@@ -184,7 +175,7 @@ class Request
      *
      * @param string $cookie
      */
-    public static function cookie($cookie)
+    public static function setCookie(string $cookie)
     {
         self::$cookie = $cookie;
     }
@@ -196,7 +187,7 @@ class Request
      *
      * @param string $cookieFile - path to file for saving cookie
      */
-    public static function cookieFile($cookieFile)
+    public static function setCookieFile(string $cookieFile)
     {
         self::$cookieFile = $cookieFile;
     }
@@ -204,11 +195,11 @@ class Request
     /**
      * Set authentication method to use
      *
-     * @param string  $username authentication username
-     * @param string  $password authentication password
-     * @param integer $method   authentication method
+     * @param string $username authentication username
+     * @param string $password authentication password
+     * @param integer $method authentication method
      */
-    public static function auth($username = '', $password = '', $method = CURLAUTH_BASIC)
+    public static function setAuthenticationMethod($username = '', $password = '', $method = CURLAUTH_BASIC)
     {
         self::$auth['user'] = $username;
         self::$auth['pass'] = $password;
@@ -218,12 +209,12 @@ class Request
     /**
      * Set proxy to use
      *
-     * @param string  $address proxy address
-     * @param integer $port    proxy port
-     * @param integer $type    (Available options for this are CURLPROXY_HTTP, CURLPROXY_HTTP_1_0 CURLPROXY_SOCKS4, CURLPROXY_SOCKS5, CURLPROXY_SOCKS4A and CURLPROXY_SOCKS5_HOSTNAME)
-     * @param bool    $tunnel  enable/disable tunneling
+     * @param string $address proxy address
+     * @param integer $port proxy port
+     * @param integer $type (Available options for this are CURLPROXY_HTTP, CURLPROXY_HTTP_1_0 CURLPROXY_SOCKS4, CURLPROXY_SOCKS5, CURLPROXY_SOCKS4A and CURLPROXY_SOCKS5_HOSTNAME)
+     * @param bool $tunnel enable/disable tunneling
      */
-    public static function proxy($address, $port = 1080, $type = CURLPROXY_HTTP, $tunnel = false)
+    public static function setProxy($address, $port = 1080, $type = CURLPROXY_HTTP, $tunnel = false)
     {
         self::$proxy['type'] = $type;
         self::$proxy['port'] = $port;
@@ -234,11 +225,11 @@ class Request
     /**
      * Set proxy authentication method to use
      *
-     * @param string  $username authentication username
-     * @param string  $password authentication password
-     * @param integer $method   authentication method
+     * @param string $username authentication username
+     * @param string $password authentication password
+     * @param integer $method authentication method
      */
-    public static function proxyAuth($username = '', $password = '', $method = CURLAUTH_BASIC)
+    public static function setProxyAuthentication($username = '', $password = '', $method = CURLAUTH_BASIC)
     {
         self::$proxy['auth']['user'] = $username;
         self::$proxy['auth']['pass'] = $password;
@@ -248,16 +239,16 @@ class Request
     /**
      * Send a GET request to a URL
      *
-     * @param string $url        URL to send the GET request to
-     * @param array  $headers    additional headers to send
-     * @param mixed  $parameters parameters to send in the querystring
-     * @param string $username   Authentication username (deprecated)
-     * @param string $password   Authentication password (deprecated)
+     * @param string $url URL to send the GET request to
+     * @param array $headers additional headers to send
+     * @param mixed|null $parameters parameters to send in the querystring
+     * @param string|null $username Authentication username (deprecated)
+     * @param string|null $password Authentication password (deprecated)
      *
      * @return Response
      * @throws Exception
      */
-    public static function get($url, $headers = [], $parameters = null, $username = null, $password = null): Response
+    public static function get(string $url, array $headers = [], mixed $parameters = null, string $username = null, string $password = null): Response
     {
         return self::send(Method::GET, trim($url), $parameters, $headers, $username, $password);
     }
@@ -265,11 +256,11 @@ class Request
     /**
      * Send a HEAD request to a URL
      *
-     * @param string $url        URL to send the HEAD request to
-     * @param array  $headers    additional headers to send
-     * @param mixed  $parameters parameters to send in the querystring
-     * @param string $username   Basic Authentication username (deprecated)
-     * @param string $password   Basic Authentication password (deprecated)
+     * @param string $url URL to send the HEAD request to
+     * @param array $headers additional headers to send
+     * @param mixed $parameters parameters to send in the querystring
+     * @param string $username Basic Authentication username (deprecated)
+     * @param string $password Basic Authentication password (deprecated)
      *
      * @return Response
      * @throws Exception
@@ -282,11 +273,11 @@ class Request
     /**
      * Send a OPTIONS request to a URL
      *
-     * @param string $url        URL to send the OPTIONS request to
-     * @param array  $headers    additional headers to send
-     * @param mixed  $parameters parameters to send in the querystring
-     * @param string $username   Basic Authentication username
-     * @param string $password   Basic Authentication password
+     * @param string $url URL to send the OPTIONS request to
+     * @param array $headers additional headers to send
+     * @param mixed $parameters parameters to send in the querystring
+     * @param string $username Basic Authentication username
+     * @param string $password Basic Authentication password
      *
      * @return Response
      * @throws Exception
@@ -299,11 +290,11 @@ class Request
     /**
      * Send a CONNECT request to a URL
      *
-     * @param string $url        URL to send the CONNECT request to
-     * @param array  $headers    additional headers to send
-     * @param mixed  $parameters parameters to send in the querystring
-     * @param string $username   Basic Authentication username (deprecated)
-     * @param string $password   Basic Authentication password (deprecated)
+     * @param string $url URL to send the CONNECT request to
+     * @param array $headers additional headers to send
+     * @param mixed $parameters parameters to send in the querystring
+     * @param string $username Basic Authentication username (deprecated)
+     * @param string $password Basic Authentication password (deprecated)
      *
      * @return Response
      * @throws Exception
@@ -316,9 +307,9 @@ class Request
     /**
      * Send POST request to a URL
      *
-     * @param string $url      URL to send the POST request to
-     * @param array  $headers  additional headers to send
-     * @param mixed  $body     POST body data
+     * @param string $url URL to send the POST request to
+     * @param array $headers additional headers to send
+     * @param mixed $body POST body data
      * @param string $username Basic Authentication username (deprecated)
      * @param string $password Basic Authentication password (deprecated)
      *
@@ -333,9 +324,9 @@ class Request
     /**
      * Send DELETE request to a URL
      *
-     * @param string $url      URL to send the DELETE request to
-     * @param array  $headers  additional headers to send
-     * @param mixed  $body     DELETE body data
+     * @param string $url URL to send the DELETE request to
+     * @param array $headers additional headers to send
+     * @param mixed $body DELETE body data
      * @param string $username Basic Authentication username (deprecated)
      * @param string $password Basic Authentication password (deprecated)
      *
@@ -350,9 +341,9 @@ class Request
     /**
      * Send PUT request to a URL
      *
-     * @param string $url      URL to send the PUT request to
-     * @param array  $headers  additional headers to send
-     * @param mixed  $body     PUT body data
+     * @param string $url URL to send the PUT request to
+     * @param array $headers additional headers to send
+     * @param mixed $body PUT body data
      * @param string $username Basic Authentication username (deprecated)
      * @param string $password Basic Authentication password (deprecated)
      *
@@ -367,9 +358,9 @@ class Request
     /**
      * Send PATCH request to a URL
      *
-     * @param string $url      URL to send the PATCH request to
-     * @param array  $headers  additional headers to send
-     * @param mixed  $body     PATCH body data
+     * @param string $url URL to send the PATCH request to
+     * @param array $headers additional headers to send
+     * @param mixed $body PATCH body data
      * @param string $username Basic Authentication username (deprecated)
      * @param string $password Basic Authentication password (deprecated)
      *
@@ -384,9 +375,9 @@ class Request
     /**
      * Send TRACE request to a URL
      *
-     * @param string $url      URL to send the TRACE request to
-     * @param array  $headers  additional headers to send
-     * @param mixed  $body     TRACE body data
+     * @param string $url URL to send the TRACE request to
+     * @param array $headers additional headers to send
+     * @param mixed $body TRACE body data
      * @param string $username Basic Authentication username (deprecated)
      * @param string $password Basic Authentication password (deprecated)
      *
@@ -402,8 +393,8 @@ class Request
      * This function is useful for serializing multidimensional arrays, and avoid getting
      * the 'Array to string conversion' notice
      *
-     * @param array|object $data   array to flatten.
-     * @param bool|string  $parent parent key or false if no parent
+     * @param array|object $data array to flatten.
+     * @param bool|string $parent parent key or false if no parent
      *
      * @return array
      */
@@ -435,12 +426,12 @@ class Request
     /**
      * Send a cURL request
      *
-     * @param Method|string $method   HTTP method to use
-     * @param string        $url      URL to send the request to
-     * @param mixed         $body     request body
-     * @param array         $headers  additional headers to send
-     * @param string        $username Authentication username (deprecated)
-     * @param string        $password Authentication password (deprecated)
+     * @param Method|string $method HTTP method to use
+     * @param string $url URL to send the request to
+     * @param mixed $body request body
+     * @param array $headers additional headers to send
+     * @param string $username Authentication username (deprecated)
+     * @param string $password Authentication password (deprecated)
      *
      * @return Response
      * @throws Exception if a cURL error occurs
@@ -456,12 +447,12 @@ class Request
                 if ($method === Method::HEAD) {
                     curl_setopt(self::$handle, CURLOPT_NOBODY, true);
                 }
-                curl_setopt(self::$handle, CURLOPT_CUSTOMREQUEST, $method);
+                curl_setopt(self::$handle, CURLOPT_CUSTOMREQUEST, $method->value);
             }
 
             curl_setopt(self::$handle, CURLOPT_POSTFIELDS, $body);
         } else if (is_array($body)) {
-            if (strpos($url, '?') !== false) {
+            if (str_contains($url, '?')) {
                 $url .= '&';
             } else {
                 $url .= '?';
@@ -545,7 +536,7 @@ class Request
         return ($opt) ? curl_getinfo(self::$handle, $opt) : curl_getinfo(self::$handle);
     }
 
-    public static function getCurlHandle()
+    public static function getCurlHandle(): ?CurlHandle
     {
         return self::$handle;
     }
@@ -571,7 +562,7 @@ class Request
         return $formattedHeaders;
     }
 
-    private static function getArrayFromQuerystring($query)
+    private static function getArrayFromQuerystring($query): array
     {
         $query = preg_replace_callback('/(?:^|(?<=&))[^=[]+/', function ($match) {
             return bin2hex(urldecode($match[0]));
@@ -626,5 +617,10 @@ class Request
     {
         $existing_options = $new_options + $existing_options;
         return $existing_options;
+    }
+
+    public static function getJsonOpts(): array
+    {
+        return self::$jsonOpts;
     }
 }

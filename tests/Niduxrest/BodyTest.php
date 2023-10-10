@@ -13,7 +13,7 @@ class BodyTest extends TestCase
     {
         $fixture = __DIR__ . '/fixtures/upload.txt';
 
-        $file = Body::File($fixture);
+        $file = Body::prepareFile($fixture);
 
         if (PHP_MAJOR_VERSION === 5 && PHP_MINOR_VERSION === 4) {
             $this->assertEquals($file, sprintf('@%s;filename=%s;type=', $fixture, basename($fixture)));
@@ -26,7 +26,7 @@ class BodyTest extends TestCase
     {
         $fixture = __DIR__ . '/fixtures/upload.txt';
 
-        $file = Body::File($fixture);
+        $file = Body::prepareFile($fixture);
         $body = [
             'to' => 'mail@mailinator.com',
             'from' => 'mail@mailinator.com',
@@ -39,19 +39,19 @@ class BodyTest extends TestCase
 
     public function testJson()
     {
-        $body = Body::Json(['foo', 'bar']);
+        $body = Body::prepareJson(['foo', 'bar']);
 
         $this->assertEquals('["foo","bar"]', $body);
     }
 
     public function testForm()
     {
-        $body = Body::Form(['foo' => 'bar', 'bar' => 'baz']);
+        $body = Body::prepareForm(['foo' => 'bar', 'bar' => 'baz']);
 
         $this->assertEquals('foo=bar&bar=baz', $body);
 
         // try again with a string
-        $body = Body::Form($body);
+        $body = Body::prepareForm($body);
 
         $this->assertEquals('foo=bar&bar=baz', $body);
     }
@@ -60,11 +60,11 @@ class BodyTest extends TestCase
     {
         $arr = ['foo' => 'bar', 'bar' => 'baz'];
 
-        $body = Body::Multipart((object)$arr);
+        $body = Body::prepareMultiPart((object)$arr);
 
         $this->assertEquals($body, $arr);
 
-        $body = Body::Multipart('flat');
+        $body = Body::prepareMultiPart('flat');
 
         $this->assertEquals(['flat'], $body);
     }
@@ -76,14 +76,14 @@ class BodyTest extends TestCase
         $data = ['foo' => 'bar', 'bar' => 'baz'];
         $files = ['test' => $fixture];
 
-        $body = Body::Multipart($data, $files);
+        $body = Body::prepareMultiPart($data, $files);
 
         // echo $body;
 
         $this->assertEquals($body, [
             'foo' => 'bar',
             'bar' => 'baz',
-            'test' => Body::File($fixture),
+            'test' => Body::prepareFile($fixture),
         ]);
     }
 }

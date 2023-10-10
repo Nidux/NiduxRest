@@ -1,17 +1,28 @@
-# NiduxRest for PHP 7+ (based on [Niduxrest](http://unirest.io) from Kong)
+# NiduxRest for PHP 8.1+ (based on [Unirest](http://unirest.io) from Kong)
 
-This is kinda a spiritual successor of Niduxrest, I will try to keep it updated as possible. The main idea is to
+This is a fork from Unirest that I try to keep it updated as possible. The main idea is to
 continue with the idea of something quick and simple as originally made by [Mashape](https://github.com/Mashape).
+
+**For PHP versions like 8.0 and below, keep using v1.0.5.**
 
 ## Notable changes
 
-* PHP 7.4 support
+* PHP 8.1 support
 * Optimization
+* Breaking changes **See below**
+
+# Breaking changes
+
+* I did remove access to properties directly, trying to follow some Object-oriented best practices, so use the proper *GET* methods instead.
+* I did rename setters to a proper naming convention
+* There was an unnecesary return on some setters, these were completely removed on v2
+* Changeing methods from interface to enum
+
 
 ## Requirements
 
 - [cURL](http://php.net/manual/en/book.curl.php)
-- PHP 5.4+
+- PHP 8.1+
 
 # Documentation
 
@@ -26,7 +37,7 @@ To install unirest-php with Composer, just add the following to your `composer.j
 ```json
 {
   "require-dev": {
-    "nidux/niduxrest-php": "3.*"
+    "nidux/niduxrest-php": "2.*"
   }
 }
 ```
@@ -63,7 +74,7 @@ A JSON Request can be constructed using the `Niduxrest\Request\Body::Json` helpe
 $headers = ['Accept' => 'application/json'];
 $data = ['name' => 'ahmad', 'company' => 'mashape'];
 
-$body = Niduxrest\Request\Body::json($data);
+$body = Niduxrest\Request\Body::prepareJson($data);
 
 $response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $body);
 ```
@@ -83,7 +94,7 @@ A typical Form Request can be constructed using the `Niduxrest\Request\Body::For
 $headers = ['Accept' => 'application/json'];
 $data = ['name' => 'ahmad', 'company' => 'mashape'];
 
-$body = Niduxrest\Request\Body::form($data);
+$body = Niduxrest\Request\Body::prepareForm($data);
 
 $response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $body);
 ```
@@ -103,7 +114,7 @@ A Multipart Request can be constructed using the `Niduxrest\Request\Body::Multip
 $headers = ['Accept' => 'application/json'];
 $data = ['name' => 'ahmad', 'company' => 'mashape'];
 
-$body = Niduxrest\Request\Body::multipart($data);
+$body = Niduxrest\Request\Body::prepareMultiPart($data);
 
 $response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $body);
 ```
@@ -122,7 +133,7 @@ $headers = ['Accept' => 'application/json'];
 $data = ['name' => 'ahmad', 'company' => 'mashape'];
 $files = ['bio' => '/path/to/bio.txt', 'avatar' => '/path/to/avatar.jpg'];
 
-$body = Niduxrest\Request\Body::multipart($data, $files);
+$body = Niduxrest\Request\Body::prepareMultiPart($data, $files);
 
 $response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $body);
  ```
@@ -135,8 +146,8 @@ $headers = ['Accept' => 'application/json'];
 $body = [
     'name' => 'ahmad', 
     'company' => 'mashape'
-    'bio' => Niduxrest\Request\Body::file('/path/to/bio.txt', 'text/plain'),
-    'avatar' => Niduxrest\Request\Body::file('/path/to/my_avatar.jpg', 'text/plain', 'avatar.jpg')
+    'bio' => Niduxrest\Request\Body::prepareFile('/path/to/bio.txt', 'text/plain'),
+    'avatar' => Niduxrest\Request\Body::prepareFile('/path/to/my_avatar.jpg', 'text/plain', 'avatar.jpg')
 ];
 
 $response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $body);
@@ -172,7 +183,7 @@ Niduxrest\Request::setBearerToken('exampleOfSuperSecretBearerToken');
 
 ```php
 // basic auth
-Niduxrest\Request::auth('username', 'password');
+Niduxrest\Request::setAuthenticationMethod('username', 'password');
 ```
 
 ##### Using the mashape key for their services (you need to get the key first)
@@ -191,23 +202,23 @@ round-trip.*
 
 **Supported Methods**
 
-| Method               | Description                                                                                                                                                                                                     |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `CURLAUTH_BASIC`     | HTTP Basic authentication. This is the default choice                                                                                                                                                           | 
-| `CURLAUTH_DIGEST`    | HTTP Digest authentication. as defined in [RFC 2617](http://www.ietf.org/rfc/rfc2617.txt)                                                                                                                       | 
-| `CURLAUTH_DIGEST_IE` | HTTP Digest authentication with an IE flavor. *The IE flavor is simply that libcurl will use a
-special "quirk" that IE is known to have used before version 7 and that some servers require the client to use.* |
-| `CURLAUTH_NEGOTIATE` | HTTP Negotiate (SPNEGO) authentication. as defined in [RFC 4559](http://www.ietf.org/rfc/rfc4559.txt)                                                                                                           |
-| `CURLAUTH_NTLM`      | HTTP NTLM authentication. A proprietary protocol invented and used by Microsoft.                                                                                                                                |
-| `CURLAUTH_NTLM_WB`   | NTLM delegating to winbind helper. Authentication is performed by a separate binary application. *
-see [libcurl docs](http://curl.haxx.se/libcurl/c/CURLOPT_HTTPAUTH.html) for more info*                        |
-| `CURLAUTH_ANY`       | This is a convenience macro that sets all bits and thus makes libcurl pick any it finds suitable. libcurl will automatically select the one it finds most secure.                                               |
-| `CURLAUTH_ANYSAFE`   | This is a convenience macro that sets all bits except Basic and thus makes libcurl pick any it finds suitable. libcurl will automatically select the one it finds most secure.                                  |
-| `CURLAUTH_ONLY`      | This is a meta symbol. OR this value together with a single specific auth value to force libcurl to probe for un-restricted auth and if not, only that single auth algorithm is acceptable.                     |
+| Method                                                                                                           | Description                                                                                                                                                                                 |
+|------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CURLAUTH_BASIC`                                                                                                 | HTTP Basic authentication. This is the default choice                                                                                                                                       | 
+| `CURLAUTH_DIGEST`                                                                                                | HTTP Digest authentication. as defined in [RFC 2617](http://www.ietf.org/rfc/rfc2617.txt)                                                                                                   | 
+| `CURLAUTH_DIGEST_IE`                                                                                             | HTTP Digest authentication with an IE flavor. *The IE flavor is simply that libcurl will use a                                                                                              |
+| special "quirk" that IE is known to have used before version 7 and that some servers require the client to use.* |                                                                                                                                                                                             |
+| `CURLAUTH_NEGOTIATE`                                                                                             | HTTP Negotiate (SPNEGO) authentication. as defined in [RFC 4559](http://www.ietf.org/rfc/rfc4559.txt)                                                                                       |
+| `CURLAUTH_NTLM`                                                                                                  | HTTP NTLM authentication. A proprietary protocol invented and used by Microsoft.                                                                                                            |
+| `CURLAUTH_NTLM_WB`                                                                                               | NTLM delegating to winbind helper. Authentication is performed by a separate binary application. *                                                                                          |
+| see [libcurl docs](http://curl.haxx.se/libcurl/c/CURLOPT_HTTPAUTH.html) for more info*                           |                                                                                                                                                                                             |
+| `CURLAUTH_ANY`                                                                                                   | This is a convenience macro that sets all bits and thus makes libcurl pick any it finds suitable. libcurl will automatically select the one it finds most secure.                           |
+| `CURLAUTH_ANYSAFE`                                                                                               | This is a convenience macro that sets all bits except Basic and thus makes libcurl pick any it finds suitable. libcurl will automatically select the one it finds most secure.              |
+| `CURLAUTH_ONLY`                                                                                                  | This is a meta symbol. OR this value together with a single specific auth value to force libcurl to probe for un-restricted auth and if not, only that single auth algorithm is acceptable. |
 
 ```php
 // custom auth method
-Niduxrest\Request::proxyAuth('username', 'password', CURLAUTH_DIGEST);
+Niduxrest\Request::setProxyAuthentication('username', 'password', CURLAUTH_DIGEST);
 ```
 
 Previous versions of **Niduxrest** support *Basic Authentication* by providing the `username` and `password` arguments:
@@ -216,7 +227,7 @@ Previous versions of **Niduxrest** support *Basic Authentication* by providing t
 $response = Niduxrest\Request::get('http://mockbin.com/request', null, null, 'username', 'password');
 ```
 
-**This has been deprecated, and will be completely removed in `v.3.0.0` please use the `Niduxrest\Request::auth()`
+**This has been deprecated, and will be completely removed in `v.2.0` please use the `Niduxrest\Request::auth()`
 method instead**
 
 ### Cookies
@@ -225,13 +236,13 @@ Set a cookie string to specify the contents of a cookie header. Multiple cookies
 by a space (e.g., "fruit=apple; colour=red")
 
 ```php
-Niduxrest\Request::cookie($cookie)
+Niduxrest\Request::setCookie($cookie)
 ```
 
 Set a cookie file path for enabling cookie reading and storing cookies across multiple sequence of requests.
 
 ```php
-Niduxrest\Request::cookieFile($cookieFile)
+Niduxrest\Request::setCookieFile($cookieFile)
 ```
 
 `$cookieFile` must be a correct path with write permission.
@@ -251,12 +262,13 @@ Niduxrest\Request::delete($url, $headers = [], $body = null)
 - `body` - Request Body as associative array or object
 
 You can send a request with any [standard](http://www.iana.org/assignments/http-methods/http-methods.xhtml) or custom
-HTTP Method:
+HTTP Method present on the Method enum:
 
 ```php
-Niduxrest\Request::send(Niduxrest\Method::LINK, $url, $headers = [], $body);
-
-Niduxrest\Request::send('CHECKOUT', $url, $headers = [], $body);
+Niduxrest\Request::send(Niduxrest\Enum\Method::LINK, $url, $headers = [], $body);
+Niduxrest\Request::send(Niduxrest\Enum\Method::CHECKOUT, $url, $headers = [], $body);
+Niduxrest\Request::send(Niduxrest\Enum\Method::HEAD, $url, $headers = [], $body);
+Niduxrest\Request::send(Niduxrest\Enum\Method::LOCK, $url, $headers = [], $body);
 ```
 
 ### Response Object
@@ -282,7 +294,7 @@ the [customization flags](http://php.net/manual/en/json.constants.php).
 To do so, simply set the desired options using the `jsonOpts` request method:
 
 ```php
-Niduxrest\Request::jsonOpts(true, 512, JSON_NUMERIC_CHECK & JSON_FORCE_OBJECT & JSON_UNESCAPED_SLASHES);
+Niduxrest\Request::setJsonOpts(true, 512, JSON_NUMERIC_CHECK & JSON_FORCE_OBJECT & JSON_UNESCAPED_SLASHES);
 ```
 
 #### Timeout
@@ -290,7 +302,7 @@ Niduxrest\Request::jsonOpts(true, 512, JSON_NUMERIC_CHECK & JSON_FORCE_OBJECT & 
 You can set a custom timeout value (in **seconds**):
 
 ```php
-Niduxrest\Request::timeout(5); // 5s timeout
+Niduxrest\Request::setTimeout(5); // 5s timeout
 ```
 
 #### Proxy
@@ -304,13 +316,13 @@ you can also set the proxy type to be one of `CURLPROXY_HTTP`, `CURLPROXY_HTTP_1
 
 ```php
 // quick setup with default port: 1080
-Niduxrest\Request::proxy('10.10.10.1');
+Niduxrest\Request::setProxy('10.10.10.1');
 
 // custom port and proxy type
-Niduxrest\Request::proxy('10.10.10.1', 8080, CURLPROXY_HTTP);
+Niduxrest\Request::setProxy('10.10.10.1', 8080, CURLPROXY_HTTP);
 
 // enable tunneling
-Niduxrest\Request::proxy('10.10.10.1', 8080, CURLPROXY_HTTP, true);
+Niduxrest\Request::setProxy('10.10.10.1', 8080, CURLPROXY_HTTP, true);
 ```
 
 ##### Proxy Authenticaton
@@ -319,7 +331,7 @@ Passing a username, password *(optional)*, defaults to Basic Authentication:
 
 ```php
 // basic auth
-Niduxrest\Request::proxyAuth('username', 'password');
+Niduxrest\Request::setProxyAuthentication('username', 'password');
 ```
 
 The third parameter, which is a bitmask, will Niduxrest which HTTP authentication method(s) you want it to use for your
@@ -333,7 +345,7 @@ See [Authentication](#authentication) for more details on methods supported.
 
 ```php
 // basic auth
-Niduxrest\Request::proxyAuth('username', 'password', CURLAUTH_DIGEST);
+Niduxrest\Request::setProxyAuthentication('username', 'password', CURLAUTH_DIGEST);
 ```
 
 #### Default Request Headers
@@ -341,17 +353,17 @@ Niduxrest\Request::proxyAuth('username', 'password', CURLAUTH_DIGEST);
 You can set default headers that will be sent on every request:
 
 ```php
-Niduxrest\Request::defaultHeader('Header1', 'Value1');
-Niduxrest\Request::defaultHeader('Header2', 'Value2');
+Niduxrest\Request::setIndidualDefaultHeader('Header1', 'Value1');
+Niduxrest\Request::setIndidualDefaultHeader('Header2', 'Value2');
 ```
 
 You can set default headers in bulk by passing an array:
 
 ```php
-Niduxrest\Request::defaultHeaders(array(
+Niduxrest\Request::setDefaultHeaders([
     'Header1' => 'Value1',
     'Header2' => 'Value2'
-));
+]);
 ```
 
 You can clear the default headers anytime with:
@@ -366,15 +378,15 @@ You can set default [cURL options](http://php.net/manual/en/function.curl-setopt
 request:
 
 ```php
-Niduxrest\Request::curlOpt(CURLOPT_COOKIE, 'foo=bar');
+Niduxrest\Request::setIndividualCurlOpt(CURLOPT_COOKIE, 'foo=bar');
 ```
 
 You can set options bulk by passing an array:
 
 ```php
-Niduxrest\Request::curlOpts(array(
+Niduxrest\Request::setCurlOpts([
     CURLOPT_COOKIE => 'foo=bar'
-));
+]);
 ```
 
 You can clear the default options anytime with:
@@ -388,7 +400,7 @@ Niduxrest\Request::clearCurlOpts();
 You can explicitly enable or disable SSL certificate validation when consuming an SSL protected endpoint:
 
 ```php
-Niduxrest\Request::verifyPeer(false); // Disables SSL cert validation
+Niduxrest\Request::setVerifyPeer(false); // Disables SSL cert validation
 ```
 
 By default is `true`.

@@ -11,11 +11,11 @@ class RequestTest extends TestCase
     // Generic
     public function testCurlOpts()
     {
-        Request::curlOpt(CURLOPT_COOKIE, 'foo=bar');
+        Request::setIndividualCurlOpt(CURLOPT_COOKIE, 'foo=bar');
 
         $response = Request::get('http://mockbin.com/request');
 
-        $this->assertTrue(property_exists($response->body->cookies, 'foo'));
+        $this->assertTrue(property_exists($response->getBody()->cookies, 'foo'));
 
         Request::clearCurlOpts();
     }
@@ -23,11 +23,11 @@ class RequestTest extends TestCase
     public function testTimeoutFail()
     {
         $this->expectException(Exception::class);
-        Request::timeout(1);
+        Request::setTimeout(1);
 
         Request::get('http://mockbin.com/delay/1000');
 
-        Request::timeout(null); // Cleaning timeout for the other tests
+        Request::setTimeout(null); // Cleaning timeout for the other tests
     }
 
     public function testDefaultHeaders()
@@ -36,47 +36,47 @@ class RequestTest extends TestCase
             'header1' => 'Hello',
             'header2' => 'world',
         ];
-        Request::defaultHeaders($defaultHeaders);
+        Request::setDefaultHeaders($defaultHeaders);
 
         $response = Request::get('http://mockbin.com/request');
 
-        $this->assertEquals(200, $response->code);
-        $this->assertObjectHasAttribute('header1', $response->body->headers);
-        $this->assertEquals('Hello', $response->body->headers->header1);
-        $this->assertObjectHasAttribute('header2', $response->body->headers);
-        $this->assertEquals('world', $response->body->headers->header2);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertTrue(property_exists($response->getBody()->headers, 'header1'));
+        $this->assertEquals('Hello', $response->getBody()->headers->header1);
+        $this->assertTrue(property_exists($response->getBody()->headers,'header2'));
+        $this->assertEquals('world', $response->getBody()->headers->header2);
 
         $response = Request::get('http://mockbin.com/request', ['header1' => 'Custom value']);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertObjectHasAttribute('header1', $response->body->headers);
-        $this->assertEquals('Custom value', $response->body->headers->header1);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertTrue(property_exists($response->getBody()->headers,'header1'));
+        $this->assertEquals('Custom value', $response->getBody()->headers->header1);
 
         Request::clearDefaultHeaders();
 
         $response = Request::get('http://mockbin.com/request');
 
-        $this->assertEquals(200, $response->code);
-        $this->assertObjectNotHasAttribute('header1', $response->body->headers);
-        $this->assertObjectNotHasAttribute('header2', $response->body->headers);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertFalse(property_exists($response->getBody()->headers,'header1'));
+        $this->assertFalse(property_exists($response->getBody()->headers,'header2'));
     }
 
     public function testDefaultHeader()
     {
-        Request::defaultHeader('Hello', 'custom');
+        Request::setIndidualDefaultHeader('Hello', 'custom');
 
         $response = Request::get('http://mockbin.com/request');
 
-        $this->assertEquals(200, $response->code);
-        $this->assertTrue(property_exists($response->body->headers, 'hello'));
-        $this->assertEquals('custom', $response->body->headers->hello);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertTrue(property_exists($response->getBody()->headers, 'hello'));
+        $this->assertEquals('custom', $response->getBody()->headers->hello);
 
         Request::clearDefaultHeaders();
 
         $response = Request::get('http://mockbin.com/request');
 
-        $this->assertEquals(200, $response->code);
-        $this->assertFalse(property_exists($response->body->headers, 'hello'));
+        $this->assertEquals(200, $response->getCode());
+        $this->assertFalse(property_exists($response->getBody()->headers, 'hello'));
     }
 
     public function testSetBearerToken()
@@ -84,9 +84,9 @@ class RequestTest extends TestCase
         $exampleBearerToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvdWlhcGkubmlkdXgubmV0XC8xMDAwOFwvbG9naW4iLCJpYXQiOjE2Mjc1Njk1MjYsImV4cCI6MTYyNzU5MTEyNiwibmJmIjoxNjI3NTY5NTI2LCJqdGkiOiJxSmh3amJGSllEV2tuMzNqIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.6bdg7bI6sSj_Urc7rQ66ZNG975Abl8SKJZv_n4EtJ_U";
         Request::setBearerToken($exampleBearerToken);
         $response = Request::get("https://enk7njbsi58p1xd.m.pipedream.net");
-        $this->assertEquals(200, $response->code);
-        $this->assertTrue(property_exists($response->body->headers, 'authorization'));
-        $this->assertEquals('Bearer ' . $exampleBearerToken, $response->body->headers->{'authorization'});
+        $this->assertEquals(200, $response->getCode());
+        $this->assertTrue(property_exists($response->getBody()->headers, 'authorization'));
+        $this->assertEquals('Bearer ' . $exampleBearerToken, $response->getBody()->headers->{'authorization'});
     }
 
 
@@ -96,29 +96,29 @@ class RequestTest extends TestCase
 
         $response = Request::get('http://mockbin.com/request');
 
-        $this->assertEquals(200, $response->code);
-        $this->assertTrue(property_exists($response->body->headers, 'x-mashape-key'));
-        $this->assertEquals('abcd', $response->body->headers->{'x-mashape-key'});
+        $this->assertEquals(200, $response->getCode());
+        $this->assertTrue(property_exists($response->getBody()->headers, 'x-mashape-key'));
+        $this->assertEquals('abcd', $response->getBody()->headers->{'x-mashape-key'});
 
         // send another request
         $response = Request::get('http://mockbin.com/request');
 
-        $this->assertEquals(200, $response->code);
-        $this->assertTrue(property_exists($response->body->headers, 'x-mashape-key'));
-        $this->assertEquals('abcd', $response->body->headers->{'x-mashape-key'});
+        $this->assertEquals(200, $response->getCode());
+        $this->assertTrue(property_exists($response->getBody()->headers, 'x-mashape-key'));
+        $this->assertEquals('abcd', $response->getBody()->headers->{'x-mashape-key'});
 
         Request::clearDefaultHeaders();
 
         $response = Request::get('http://mockbin.com/request');
 
-        $this->assertEquals(200, $response->code);
-        $this->assertFalse(property_exists($response->body->headers, 'x-mashape-key'));
+        $this->assertEquals(200, $response->getCode());
+        $this->assertFalse(property_exists($response->getBody()->headers, 'x-mashape-key'));
     }
 
     public function testGzip()
     {
         $response = Request::get('http://mockbin.com/gzip/request', ["accept-encoding" => "gzip"]);
-        $this->assertEquals('gzip', $response->headers['content-encoding'] ?? $response->headers['Content-Encoding']);
+        $this->assertEquals('gzip', $response->getHeaders()['content-encoding'] ?? $response->getHeaders()['Content-Encoding']);
     }
 
     public function testBasicAuthenticationDeprecated()
@@ -126,16 +126,16 @@ class RequestTest extends TestCase
 
         $response = Request::get('http://mockbin.com/request', [], [], 'user', 'password');
 
-        $this->assertEquals('Basic dXNlcjpwYXNzd29yZA==', $response->body->headers->authorization);
+        $this->assertEquals('Basic dXNlcjpwYXNzd29yZA==', $response->getBody()->headers->authorization);
     }
 
     public function testBasicAuthentication()
     {
-        Request::auth('user', 'password');
+        Request::setAuthenticationMethod('user', 'password');
 
         $response = Request::get('http://mockbin.com/request');
 
-        $this->assertEquals('Basic dXNlcjpwYXNzd29yZA==', $response->body->headers->authorization);
+        $this->assertEquals('Basic dXNlcjpwYXNzd29yZA==', $response->getBody()->headers->authorization);
     }
 
     public function testCustomHeaders()
@@ -144,8 +144,8 @@ class RequestTest extends TestCase
             'user-agent' => 'unirest-php',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('unirest-php', $response->body->headers->{'user-agent'});
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('unirest-php', $response->getBody()->headers->{'user-agent'});
     }
 
     // GET
@@ -157,10 +157,10 @@ class RequestTest extends TestCase
             'nick' => 'thefosk',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('GET', $response->body->method);
-        $this->assertEquals('Mark', $response->body->queryString->name);
-        $this->assertEquals('thefosk', $response->body->queryString->nick);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('GET', $response->getBody()->method);
+        $this->assertEquals('Mark', $response->getBody()->queryString->name);
+        $this->assertEquals('thefosk', $response->getBody()->queryString->nick);
     }
 
     public function testGetWithExplicitPort()
@@ -171,10 +171,10 @@ class RequestTest extends TestCase
             'nick' => 'thefosk',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('GET', $response->body->method);
-        $this->assertEquals('Mark', $response->body->queryString->name);
-        $this->assertEquals('thefosk', $response->body->queryString->nick);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('GET', $response->getBody()->method);
+        $this->assertEquals('Mark', $response->getBody()->queryString->name);
+        $this->assertEquals('thefosk', $response->getBody()->queryString->nick);
     }
 
     public function testGetMultidimensionalArray()
@@ -189,11 +189,11 @@ class RequestTest extends TestCase
             ],
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('GET', $response->body->method);
-        $this->assertEquals('value', $response->body->queryString->key);
-        $this->assertEquals('item1', $response->body->queryString->items[0]);
-        $this->assertEquals('item2', $response->body->queryString->items[1]);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('GET', $response->getBody()->method);
+        $this->assertEquals('value', $response->getBody()->queryString->key);
+        $this->assertEquals('item1', $response->getBody()->queryString->items[0]);
+        $this->assertEquals('item2', $response->getBody()->queryString->items[1]);
     }
 
     public function testGetWithDots()
@@ -205,10 +205,10 @@ class RequestTest extends TestCase
             'nick' => 'thefosk',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('GET', $response->body->method);
-        $this->assertEquals('Mark', $response->body->queryString->{'user.name'});
-        $this->assertEquals('thefosk', $response->body->queryString->nick);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('GET', $response->getBody()->method);
+        $this->assertEquals('Mark', $response->getBody()->queryString->{'user.name'});
+        $this->assertEquals('thefosk', $response->getBody()->queryString->nick);
     }
 
     public function testGetWithDotsAlt()
@@ -220,10 +220,10 @@ class RequestTest extends TestCase
             'nick' => 'thefosk',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('GET', $response->body->method);
-        $this->assertEquals('Mark Bond', $response->body->queryString->{'user.name'});
-        $this->assertEquals('thefosk', $response->body->queryString->nick);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('GET', $response->getBody()->method);
+        $this->assertEquals('Mark Bond', $response->getBody()->queryString->{'user.name'});
+        $this->assertEquals('thefosk', $response->getBody()->queryString->nick);
     }
 
     public function testGetWithEqualSign()
@@ -234,9 +234,9 @@ class RequestTest extends TestCase
             'name' => 'Mark=Hello',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('GET', $response->body->method);
-        $this->assertEquals('Mark=Hello', $response->body->queryString->name);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('GET', $response->getBody()->method);
+        $this->assertEquals('Mark=Hello', $response->getBody()->queryString->name);
     }
 
     public function testGetWithEqualSignAlt()
@@ -247,19 +247,19 @@ class RequestTest extends TestCase
             'name' => 'Mark=Hello=John',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('GET', $response->body->method);
-        $this->assertEquals('Mark=Hello=John', $response->body->queryString->name);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('GET', $response->getBody()->method);
+        $this->assertEquals('Mark=Hello=John', $response->getBody()->queryString->name);
     }
 
     public function testGetWithComplexQuery()
     {
         $response = Request::get('http://mockbin.com/request?query=[{"type":"/music/album","name":null,"artist":{"id":"/en/bob_dylan"},"limit":3}]&cursor');
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('GET', $response->body->method);
-        $this->assertEquals('', $response->body->queryString->cursor);
-        $this->assertEquals('[{"type":"/music/album","name":null,"artist":{"id":"/en/bob_dylan"},"limit":3}]', $response->body->queryString->query);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('GET', $response->getBody()->method);
+        $this->assertEquals('', $response->getBody()->queryString->cursor);
+        $this->assertEquals('[{"type":"/music/album","name":null,"artist":{"id":"/en/bob_dylan"},"limit":3}]', $response->getBody()->queryString->query);
     }
 
     public function testGetArray()
@@ -269,10 +269,10 @@ class RequestTest extends TestCase
             'name[1]' => 'John',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('GET', $response->body->method);
-        $this->assertEquals('Mark', $response->body->queryString->name[0]);
-        $this->assertEquals('John', $response->body->queryString->name[1]);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('GET', $response->getBody()->method);
+        $this->assertEquals('Mark', $response->getBody()->queryString->name[0]);
+        $this->assertEquals('John', $response->getBody()->queryString->name[1]);
     }
 
     // HEAD
@@ -282,7 +282,7 @@ class RequestTest extends TestCase
             'Accept' => 'application/json',
         ]);
 
-        $this->assertEquals(200, $response->code);
+        $this->assertEquals(200, $response->getCode());
     }
 
     // POST
@@ -295,10 +295,10 @@ class RequestTest extends TestCase
             'nick' => 'thefosk',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('POST', $response->body->method);
-        $this->assertEquals('Mark', $response->body->postData->params->name);
-        $this->assertEquals('thefosk', $response->body->postData->params->nick);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('POST', $response->getBody()->method);
+        $this->assertEquals('Mark', $response->getBody()->postData->params->name);
+        $this->assertEquals('thefosk', $response->getBody()->postData->params->nick);
     }
 
 
@@ -312,15 +312,15 @@ class RequestTest extends TestCase
             'nick' => 'thefosk',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('POST', $response->body->method);
-        $this->assertEquals('Mark', $response->body->postData->params->name);
-        $this->assertEquals('thefosk', $response->body->postData->params->nick);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('POST', $response->getBody()->method);
+        $this->assertEquals('Mark', $response->getBody()->postData->params->name);
+        $this->assertEquals('thefosk', $response->getBody()->postData->params->nick);
     }
 
     public function testPostForm()
     {
-        $body = Request\Body::Form([
+        $body = Request\Body::prepareForm([
             'name' => 'Mark',
             'nick' => 'thefosk',
         ]);
@@ -329,16 +329,16 @@ class RequestTest extends TestCase
             'Accept' => 'application/json',
         ], $body);
 
-        $this->assertEquals('POST', $response->body->method);
-        $this->assertEquals('application/x-www-form-urlencoded', $response->body->headers->{'content-type'});
-        $this->assertEquals('application/x-www-form-urlencoded', $response->body->postData->mimeType);
-        $this->assertEquals('Mark', $response->body->postData->params->name);
-        $this->assertEquals('thefosk', $response->body->postData->params->nick);
+        $this->assertEquals('POST', $response->getBody()->method);
+        $this->assertEquals('application/x-www-form-urlencoded', $response->getBody()->headers->{'content-type'});
+        $this->assertEquals('application/x-www-form-urlencoded', $response->getBody()->postData->mimeType);
+        $this->assertEquals('Mark', $response->getBody()->postData->params->name);
+        $this->assertEquals('thefosk', $response->getBody()->postData->params->nick);
     }
 
     public function testPostMultipart()
     {
-        $body = Request\Body::Multipart([
+        $body = Request\Body::prepareMultiPart([
             'name' => 'Mark',
             'nick' => 'thefosk',
         ]);
@@ -347,16 +347,16 @@ class RequestTest extends TestCase
             'Accept' => 'application/json',
         ], $body);
 
-        $this->assertEquals('POST', $response->body->method);
-        $this->assertEquals('multipart/form-data', explode(';', $response->body->headers->{'content-type'})[0]);
-        $this->assertEquals('multipart/form-data', $response->body->postData->mimeType);
-        $this->assertEquals('Mark', $response->body->postData->params->name);
-        $this->assertEquals('thefosk', $response->body->postData->params->nick);
+        $this->assertEquals('POST', $response->getBody()->method);
+        $this->assertEquals('multipart/form-data', explode(';', $response->getBody()->headers->{'content-type'})[0]);
+        $this->assertEquals('multipart/form-data', $response->getBody()->postData->mimeType);
+        $this->assertEquals('Mark', $response->getBody()->postData->params->name);
+        $this->assertEquals('thefosk', $response->getBody()->postData->params->nick);
     }
 
     public function testPostWithEqualSign()
     {
-        $body = Request\Body::Form([
+        $body = Request\Body::prepareForm([
             'name' => 'Mark=Hello',
         ]);
 
@@ -364,9 +364,9 @@ class RequestTest extends TestCase
             'Accept' => 'application/json',
         ], $body);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('POST', $response->body->method);
-        $this->assertEquals('Mark=Hello', $response->body->postData->params->name);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('POST', $response->getBody()->method);
+        $this->assertEquals('Mark=Hello', $response->getBody()->postData->params->name);
     }
 
     public function testPostArray()
@@ -378,10 +378,10 @@ class RequestTest extends TestCase
             'name[1]' => 'John',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('POST', $response->body->method);
-        $this->assertEquals('Mark', $response->body->postData->params->{'name[0]'});
-        $this->assertEquals('John', $response->body->postData->params->{'name[1]'});
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('POST', $response->getBody()->method);
+        $this->assertEquals('Mark', $response->getBody()->postData->params->{'name[0]'});
+        $this->assertEquals('John', $response->getBody()->postData->params->{'name[1]'});
     }
 
     public function testPostWithDots()
@@ -393,10 +393,10 @@ class RequestTest extends TestCase
             'nick' => 'thefosk',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('POST', $response->body->method);
-        $this->assertEquals('Mark', $response->body->postData->params->{'user.name'});
-        $this->assertEquals('thefosk', $response->body->postData->params->nick);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('POST', $response->getBody()->method);
+        $this->assertEquals('Mark', $response->getBody()->postData->params->{'user.name'});
+        $this->assertEquals('thefosk', $response->getBody()->postData->params->nick);
     }
 
     public function testRawPost()
@@ -408,14 +408,14 @@ class RequestTest extends TestCase
             'author' => 'Sam Sullivan',
         ]));
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('POST', $response->body->method);
-        $this->assertEquals('Sam Sullivan', json_decode($response->body->postData->text)->author);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('POST', $response->getBody()->method);
+        $this->assertEquals('Sam Sullivan', json_decode($response->getBody()->postData->text)->author);
     }
 
     public function testPostMultidimensionalArray()
     {
-        $body = Request\Body::Form([
+        $body = Request\Body::prepareForm([
             'key' => 'value',
             'items' => [
                 'item1',
@@ -427,11 +427,11 @@ class RequestTest extends TestCase
             'Accept' => 'application/json',
         ], $body);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('POST', $response->body->method);
-        $this->assertEquals('value', $response->body->postData->params->key);
-        $this->assertEquals('item1', $response->body->postData->params->{'items[0]'});
-        $this->assertEquals('item2', $response->body->postData->params->{'items[1]'});
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('POST', $response->getBody()->method);
+        $this->assertEquals('value', $response->getBody()->postData->params->key);
+        $this->assertEquals('item1', $response->getBody()->postData->params->{'items[0]'});
+        $this->assertEquals('item2', $response->getBody()->postData->params->{'items[1]'});
     }
 
     // PUT
@@ -444,10 +444,10 @@ class RequestTest extends TestCase
             'nick' => 'thefosk',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('PUT', $response->body->method);
-        $this->assertEquals('Mark', $response->body->postData->params->name);
-        $this->assertEquals('thefosk', $response->body->postData->params->nick);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('PUT', $response->getBody()->method);
+        $this->assertEquals('Mark', $response->getBody()->postData->params->name);
+        $this->assertEquals('thefosk', $response->getBody()->postData->params->nick);
     }
 
     // PATCH
@@ -460,10 +460,10 @@ class RequestTest extends TestCase
             'nick' => 'thefosk',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('PATCH', $response->body->method);
-        $this->assertEquals('Mark', $response->body->postData->params->name);
-        $this->assertEquals('thefosk', $response->body->postData->params->nick);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('PATCH', $response->getBody()->method);
+        $this->assertEquals('Mark', $response->getBody()->postData->params->name);
+        $this->assertEquals('thefosk', $response->getBody()->postData->params->nick);
     }
 
     // DELETE
@@ -477,8 +477,8 @@ class RequestTest extends TestCase
             'nick' => 'thefosk',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('DELETE', $response->body->method);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('DELETE', $response->getBody()->method);
     }
 
     // Upload
@@ -490,14 +490,14 @@ class RequestTest extends TestCase
         $files = ['file' => $fixture];
         $data = ['name' => 'ahmad'];
 
-        $body = Request\Body::Multipart($data, $files);
+        $body = Request\Body::prepareMultiPart($data, $files);
 
         $response = Request::post('http://mockbin.com/request', $headers, $body);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('POST', $response->body->method);
-        $this->assertEquals('ahmad', $response->body->postData->params->name);
-        $this->assertEquals('This is a test', $response->body->postData->params->file);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('POST', $response->getBody()->method);
+        $this->assertEquals('ahmad', $response->getBody()->postData->params->name);
+        $this->assertEquals('This is a test', $response->getBody()->postData->params->file);
     }
 
     public function testNamedURLWithPort()
@@ -507,8 +507,7 @@ class RequestTest extends TestCase
             'Accept' => 'application/json',
         ]);
 
-        $this->assertEquals(200, $response->code);
-        print_r($response);
+        $this->assertEquals(200, $response->getCode());
     }
 
     public function testUploadWithoutHelper()
@@ -519,13 +518,13 @@ class RequestTest extends TestCase
             'Accept' => 'application/json',
         ], [
             'name' => 'Mark',
-            'file' => Request\Body::File($fixture),
+            'file' => Request\Body::prepareFile($fixture),
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('POST', $response->body->method);
-        $this->assertEquals('Mark', $response->body->postData->params->name);
-        $this->assertEquals('This is a test', $response->body->postData->params->file);
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('POST', $response->getBody()->method);
+        $this->assertEquals('Mark', $response->getBody()->postData->params->name);
+        $this->assertEquals('This is a test', $response->getBody()->postData->params->file);
     }
 
     public function testUploadIfFilePartOfData()
@@ -536,12 +535,12 @@ class RequestTest extends TestCase
             'Accept' => 'application/json',
         ], [
             'name' => 'Mark',
-            'files[owl.gif]' => Request\Body::File($fixture),
+            'files[owl.gif]' => Request\Body::prepareFile($fixture),
         ]);
 
-        $this->assertEquals(200, $response->code);
-        $this->assertEquals('POST', $response->body->method);
-        $this->assertEquals('Mark', $response->body->postData->params->name);
-        $this->assertEquals('This is a test', $response->body->postData->params->{'files[owl.gif]'});
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('POST', $response->getBody()->method);
+        $this->assertEquals('Mark', $response->getBody()->postData->params->name);
+        $this->assertEquals('This is a test', $response->getBody()->postData->params->{'files[owl.gif]'});
     }
 }

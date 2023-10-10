@@ -16,7 +16,7 @@ class Body
      * @param string $postname the file name
      * @return string|CURLFile
      */
-    public static function File($filename, $mimetype = '', $postname = '')
+    public static function prepareFile(string $filename, string $mimetype = '', string $postname = '')
     {
         if (class_exists('CURLFile')) {
             return new CURLFile($filename, $mimetype, $postname);
@@ -34,7 +34,7 @@ class Body
      * @return false|string
      * @throws Exception
      */
-    public static function Json($data)
+    public static function prepareJson($data): bool|string
     {
         if (!function_exists('json_encode')) {
             throw new Exception('JSON Extension not available');
@@ -43,7 +43,7 @@ class Body
         return json_encode($data);
     }
 
-    public static function Form($data)
+    public static function prepareForm($data)
     {
         if (is_array($data) || is_object($data) || $data instanceof Traversable) {
             return http_build_query(Request::buildHTTPCurlQuery($data));
@@ -52,7 +52,7 @@ class Body
         return $data;
     }
 
-    public static function Multipart($data, $files = false): array
+    public static function prepareMultiPart($data, $files = false): array
     {
         if (is_object($data)) {
             return get_object_vars($data);
@@ -64,7 +64,7 @@ class Body
 
         if ($files !== false) {
             foreach ($files as $name => $file) {
-                $data[$name] = call_user_func([__CLASS__, 'File'], $file);
+                $data[$name] = call_user_func([__CLASS__, 'prepareFile'], $file);
             }
         }
 
