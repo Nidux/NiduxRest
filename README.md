@@ -60,11 +60,13 @@ $query = ['foo' => 'hello', 'bar' => 'world'];
 
 $response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $query);
 
-$response->code;        // HTTP Status code
-$response->headers;     // Headers
-$response->body;        // Parsed body
-$response->raw_body;    // Unparsed body
+$response->getCode();        // HTTP Status code via getter
+$response->getHeaders();     // Headers via getter
+$response->getBody();        // Parsed body via getter
+$response->getRawBody();    // Unparsed body via getter
 ```
+**PAY ATTENTION HERE: You cannot access the properties directly anymore**
+
 
 ### JSON Requests *(`application/json`)*
 
