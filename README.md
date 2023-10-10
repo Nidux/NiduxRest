@@ -70,7 +70,7 @@ $response->getRawBody();    // Unparsed body via getter
 
 ### JSON Requests *(`application/json`)*
 
-A JSON Request can be constructed using the `Niduxrest\Request\Body::Json` helper:
+A JSON Request can be constructed using the `Niduxrest\Request\Body::prepareJson` helper:
 
 ```php
 $headers = ['Accept' => 'application/json'];
@@ -90,7 +90,7 @@ $response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $bod
 
 ### Form Requests *(`application/x-www-form-urlencoded`)*
 
-A typical Form Request can be constructed using the `Niduxrest\Request\Body::Form` helper:
+A typical Form Request can be constructed using the `Niduxrest\Request\Body::prepareForm` helper:
 
 ```php
 $headers = ['Accept' => 'application/json'];
@@ -110,7 +110,7 @@ $response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $bod
 
 ### Multipart Requests *(`multipart/form-data`)*
 
-A Multipart Request can be constructed using the `Niduxrest\Request\Body::Multipart` helper:
+A Multipart Request can be constructed using the `Niduxrest\Request\Body::prepareMultiPart` helper:
 
 ```php
 $headers = ['Accept' => 'application/json'];
@@ -128,7 +128,7 @@ $response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $bod
 
 ### Multipart File Upload
 
-simply add an array of files as the second argument to to the `Multipart` helper:
+simply add an array of files as the second argument to to the `prepareMultiPart` helper:
 
 ```php
 $headers = ['Accept' => 'application/json'];
@@ -140,7 +140,7 @@ $body = Niduxrest\Request\Body::prepareMultiPart($data, $files);
 $response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $body);
  ```
 
-If you wish to further customize the properties of files uploaded you can do so with the `Niduxrest\Request\Body::File`
+If you wish to further customize the properties of files uploaded you can do so with the `Niduxrest\Request\Body::prepareFile`
 helper:
 
 ```php
@@ -275,13 +275,12 @@ Niduxrest\Request::send(Niduxrest\Enum\Method::LOCK, $url, $headers = [], $body)
 
 ### Response Object
 
-Upon recieving a response Niduxrest returns the result in the form of an Object, this object should always have the same
-keys for each language regarding to the response details.
+Upon recieving a response, Niduxrest returns a Response Object, this object will have the following getters available.
 
-- `code` - HTTP Response Status Code (Example `200`)
-- `headers` - HTTP Response Headers
-- `body` - Parsed response body where applicable, for example JSON responses are parsed to Objects / Associative Arrays.
-- `raw_body` - Un-parsed response body
+- `getCode()` - HTTP Response Status Code (Example `200`)
+- `getHeaders()` - HTTP Response Headers
+- `getBody()` - Parsed response body where applicable, for example JSON responses are parsed to Objects / Associative Arrays.
+- `getRawBody()` - Un-parsed response body
 
 ### Advanced Configuration
 
@@ -293,7 +292,7 @@ Niduxrest uses PHP's [JSON Extension](http://php.net/manual/en/book.json.php) fo
 sometime you may want to return associative arrays, limit the depth of recursion, or use any of
 the [customization flags](http://php.net/manual/en/json.constants.php).
 
-To do so, simply set the desired options using the `jsonOpts` request method:
+To do so, simply set the desired options using the `setJsonOpts` request method:
 
 ```php
 Niduxrest\Request::setJsonOpts(true, 512, JSON_NUMERIC_CHECK & JSON_FORCE_OBJECT & JSON_UNESCAPED_SLASHES);
