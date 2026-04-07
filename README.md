@@ -1,5 +1,10 @@
 # NiduxRest PHP Client
 
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/nidux/niduxrest-php.svg?style=flat-square)](https://packagist.org/packages/nidux/niduxrest-php)
+[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/Nidux/NiduxRest/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/Nidux/NiduxRest/actions)
+[![Total Downloads](https://img.shields.io/packagist/dt/nidux/niduxrest-php.svg?style=flat-square)](https://packagist.org/packages/nidux/niduxrest-php)
+[![PHP from Packagist](https://img.shields.io/packagist/php-v/nidux/niduxrest-php.svg?style=flat-square)](https://packagist.org/packages/nidux/niduxrest-php)
+
 A fast, lightweight, and modern HTTP client for PHP 8.3+.
 Originally a fork from Kong's Unirest, NiduxRest has been completely rewritten from the ground up in v3.0 to embrace
 strict typing, isolated instances, and a beautiful fluent interface.
