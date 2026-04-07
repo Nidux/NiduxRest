@@ -1,10 +1,10 @@
 <?php
 
-namespace Tests;
+namespace Nidux\Rest\Tests;
 
 use CURLFile;
-use Niduxrest\Request as Request;
-use Niduxrest\Request\Body as Body;
+use Nidux\Rest\Request as Request;
+use Nidux\Rest\Request\Body as Body;
 use PHPUnit\Framework\TestCase;
 
 class BodyTest extends TestCase
@@ -12,14 +12,8 @@ class BodyTest extends TestCase
     public function testCURLFile()
     {
         $fixture = __DIR__ . '/fixtures/upload.txt';
-
         $file = Body::prepareFile($fixture);
-
-        if (PHP_MAJOR_VERSION === 5 && PHP_MINOR_VERSION === 4) {
-            $this->assertEquals($file, sprintf('@%s;filename=%s;type=', $fixture, basename($fixture)));
-        } else {
-            $this->assertTrue($file instanceof CURLFile);
-        }
+        $this->assertTrue($file instanceof CURLFile);
     }
 
     public function testHttpBuildQueryWithCurlFile()

@@ -6,7 +6,7 @@
  * http://www.iana.org/assignments/http-methods/http-methods.xhtml
  */
 
-namespace Niduxrest\Enum;
+namespace Nidux\Rest\Enum;
 
 enum Method: string
 {

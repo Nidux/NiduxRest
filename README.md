@@ -1,43 +1,77 @@
-# NiduxRest for PHP 8.1+ (based on [Unirest](http://unirest.io) from Kong)
+# NiduxRest PHP Client
 
-This is a fork from Unirest that I try to keep it updated as possible. The main idea is to
-continue with the idea of something quick and simple as originally made by [Mashape](https://github.com/Mashape).
+A fast, lightweight, and modern HTTP client for PHP 8.3+.
+Originally a fork from Kong's Unirest, NiduxRest has been completely rewritten from the ground up in v3.0 to embrace
+strict typing, isolated instances, and a beautiful fluent interface.
 
-**For PHP versions like 8.0 and below, keep using v1.0.5.**
+> **ATTENTION: BREAKING CHANGES (v3.0.0)**
+> Version 3.0 is a complete architectural overhaul.
+> * **New Namespace:** The namespace has been upgraded from `Niduxrest` to `Nidux\Rest` to comply with modern PSR-4
+    standards.
+> * **No More Global State:** All static methods for requests (`Request::post()`, `Request::setJsonOpts()`, etc.) have
+    been removed. The client now uses a strictly fluent, instance-based approach.
+> * **Response Handling:** Responses are now predictable DTOs. Direct property access (e.g., `$response->code`) is
+    removed in favor of strict getters.
+> * **Deprecation removal:** All previous methods marked as deprecated have been removed.
 
-## Notable changes
+If your project still relies on the classic static calls, please lock your `composer.json` to
+`"nidux/niduxrest-php": "^2.0"`, then perform a refactoring on non-production environments.
 
-* PHP 8.1 support
-* Optimization
-* Breaking changes **See below**
+---
 
-# Breaking changes
+## The Fluent Advantage: v3 vs v2
 
-* I did remove access to properties directly, trying to follow some Object-oriented best practices, so use the proper *GET* methods instead.
-* I did rename setters to a proper naming convention
-* There was an unnecesary return on some setters, these were completely removed on v2
-* Changeing methods from interface to enum
+Why the rewrite? In enterprise SaaS environments, relying on static global states (like setting global timeouts or
+headers) leads to unpredictable bugs when multiple API calls are made in the same lifecycle.
+Here on Nidux, we've encountered many of these bugs, leading to critical and weird issues in production. We did solve
+this problem by working around over version 2, but it was not a realistic solution for us. NiduxRest was needing a
+complete rewrite.
 
+v3 introduces isolated instances with a fluent builder pattern.
+
+**The Old Way (v2.0):** Positional arguments, easy to forget the order, relies on global state affecting all future
+requests in the same script.
+
+```php
+// Setting global state (Dangerous in large apps)
+\Niduxrest\Request::setTimeout(10); 
+$response = \Niduxrest\Request::post('https://api.example.com', ['Accept' => 'application/json'], $body);
+```
+
+**The New Way (v3.0.0):** Expressive, isolated, and IDE-friendly.
+
+```php
+use Nidux\Rest\Request;
+
+$response = Request::new()
+    ->post('https://api.example.com')
+    ->withHeader('Accept', 'application/json')
+    ->withBearerToken('super-secret-token')
+    ->timeout(10)
+    ->withBody(['name' => 'John Doe'])
+    ->send();
+```
 
 ## Requirements
 
 - [cURL](http://php.net/manual/en/book.curl.php)
-- PHP 8.1+
+- PHP 8.3+
 
 # Documentation
 
-I will keep most of the original documentation for simplicity, I will update the example as I begin making improvements
+Since this is a complete rewrite, the documentation is now focused on the new fluent interface. So if you need to refer
+to the old documentation, please refer to the [v2.0.1](https://github.com/Nidux/NiduxRest/tree/v2.0.1) tag.
 
 ## Installation
 
 ### Using [Composer](https://getcomposer.org)
 
-To install unirest-php with Composer, just add the following to your `composer.json` file:
+To install NiduxRest with Composer, just add the following to your `composer.json` file:
 
 ```json
 {
-  "require-dev": {
-    "nidux/niduxrest-php": "2.*"
+  "require": {
+    "nidux/niduxrest-php": "^3.0"
   }
 }
 ```
@@ -48,371 +82,186 @@ or by running the following command:
 composer require nidux/niduxrest-php
 ```
 
-## Usage
+## Basic Usage
 
-### Creating a Request
+### Making Requests
 
-So you're probably wondering how using Niduxrest makes creating requests in PHP easier, let's look at a working example:
-
-```php
-$headers = ['Accept' => 'application/json'];
-$query = ['foo' => 'hello', 'bar' => 'world'];
-
-$response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $query);
-
-$response->getCode();        // HTTP Status code via getter
-$response->getHeaders();     // Headers via getter
-$response->getBody();        // Parsed body via getter
-$response->getRawBody();    // Unparsed body via getter
-```
-**PAY ATTENTION HERE: You cannot access the properties directly anymore**
-
-
-### JSON Requests *(`application/json`)*
-
-A JSON Request can be constructed using the `Niduxrest\Request\Body::prepareJson` helper:
+You can start a request using the `new()` static constructor and chain your configurations. You can use a very specific
+fluent approach or use some of the available helpers:
 
 ```php
-$headers = ['Accept' => 'application/json'];
-$data = ['name' => 'ahmad', 'company' => 'mashape'];
+use Nidux\Rest\Request;
+use Nidux\Rest\Enum\Method;
 
-$body = Niduxrest\Request\Body::prepareJson($data);
+// GET Request with Query Parameters 
+$response = Request::new()
+    ->to('https://postman-echo.com/get')
+    ->withQuery(['search' => 'laptop', 'limit' => 10])
+    ->send();
 
-$response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $body);
-```
+// POST Request (JSON by default)
+$response = Request::new()
+    ->to('https://postman-echo.com/post')
+    ->withMethod(Method::POST)
+    ->withBody(['sku' => '12345', 'price' => 99.99])
+    ->send();
 
-**Notes:**
 
-- `Content-Type` headers will be automatically set to `application/json`
-- the data variable will be processed through [`json_encode`](http://php.net/manual/en/function.json-encode.php) with
-  default values for arguments.
-- an error will be thrown if the [JSON Extension](http://php.net/manual/en/book.json.php) is not available.
+// GET Request with Query Parameters (with Helper)
+$response = Request::new()
+    ->get('https://postman-echo.com/get')
+    ->withQuery(['search' => 'laptop', 'limit' => 10])
+    ->send();
 
-### Form Requests *(`application/x-www-form-urlencoded`)*
-
-A typical Form Request can be constructed using the `Niduxrest\Request\Body::prepareForm` helper:
-
-```php
-$headers = ['Accept' => 'application/json'];
-$data = ['name' => 'ahmad', 'company' => 'mashape'];
-
-$body = Niduxrest\Request\Body::prepareForm($data);
-
-$response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $body);
+// POST Request (JSON by default) (with Helper)
+$response = Request::new()
+    ->post('https://postman-echo.com/post')
+    ->withBody(['sku' => '12345', 'price' => 99.99])
+    ->send();
 ```
 
-**Notes:**
+*Available HTTP method helpers:* `->get()`, `->post()`, `->put()`, `->patch()`, `->delete()`, `->head()`, `->options()`,
+`->trace()`.
 
-- `Content-Type` headers will be automatically set to `application/x-www-form-urlencoded`
-- the final data array will be processed
-  through [`http_build_query`](http://php.net/manual/en/function.http-build-query.php) with default values for
-  arguments.
+### Request Bodies
 
-### Multipart Requests *(`multipart/form-data`)*
-
-A Multipart Request can be constructed using the `Niduxrest\Request\Body::prepareMultiPart` helper:
+The `withBody()` method takes two arguments: the data array/object, and a boolean `$asJson` (default `true`).
 
 ```php
-$headers = ['Accept' => 'application/json'];
-$data = ['name' => 'ahmad', 'company' => 'mashape'];
+// Send as application/json (Default)
+->withBody(['name' => 'John']); 
 
-$body = Niduxrest\Request\Body::prepareMultiPart($data);
-
-$response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $body);
+// Send as application/x-www-form-urlencoded
+->withBody(['name' => 'John'], false);
 ```
 
-**Notes:**
+### Multipart & File Uploads
 
-- `Content-Type` headers will be automatically set to `multipart/form-data`.
-- an auto-generated `--boundary` will be set.
-
-### Multipart File Upload
-
-simply add an array of files as the second argument to to the `prepareMultiPart` helper:
+For `multipart/form-data` and file uploads, use the `withMultipartBody()` helper alongside the `Body::prepareFile()`
+utility:
 
 ```php
-$headers = ['Accept' => 'application/json'];
-$data = ['name' => 'ahmad', 'company' => 'mashape'];
-$files = ['bio' => '/path/to/bio.txt', 'avatar' => '/path/to/avatar.jpg'];
+use Nidux\Rest\Request;
+use Nidux\Rest\Request\Body;
 
-$body = Niduxrest\Request\Body::prepareMultiPart($data, $files);
-
-$response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $body);
- ```
-
-If you wish to further customize the properties of files uploaded you can do so with the `Niduxrest\Request\Body::prepareFile`
-helper:
-
-```php
-$headers = ['Accept' => 'application/json'];
-$body = [
-    'name' => 'ahmad', 
-    'company' => 'mashape'
-    'bio' => Niduxrest\Request\Body::prepareFile('/path/to/bio.txt', 'text/plain'),
-    'avatar' => Niduxrest\Request\Body::prepareFile('/path/to/my_avatar.jpg', 'text/plain', 'avatar.jpg')
-];
-
-$response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $body);
- ```
-
-**Note**: we did not use the `Niduxrest\Request\Body::multipart` helper in this example, it is not needed when manually
-adding files.
-
-### Custom Body
-
-Sending a custom body such rather than using the `Niduxrest\Request\Body` helpers is also possible, for example, using
-a [`serialize`](http://php.net/manual/en/function.serialize.php) body string with a custom `Content-Type`:
-
-```php
-$headers = ['Accept' => 'application/json', 'Content-Type' => 'application/x-php-serialized'];
-$body = serialize((['foo' => 'hello', 'bar' => 'world']);
-
-$response = Niduxrest\Request::post('http://mockbin.com/request', $headers, $body);
+$response = Request::new()
+    ->post('https://api.example.com/upload')
+    ->withMultipartBody([
+        'username' => 'ahmad',
+        'avatar' => Body::prepareFile('/path/to/avatar.jpg', 'image/jpeg')
+    ])
+    ->send();
 ```
 
-### Authentication examples
+---
 
-##### Bearer token authentication
+### The Response Object
 
-For simplicity, there is a new method to set a bearer token to the Request
-
-```php
-// auth with bearer token
-Niduxrest\Request::setBearerToken('exampleOfSuperSecretBearerToken');
-```
-
-##### Basic authentication
+NiduxRest v3 respects that different developers prefer different data structures. The Response object parses JSON
+automatically and allows you to retrieve data in three different ways:
 
 ```php
-// basic auth
-Niduxrest\Request::setAuthenticationMethod('username', 'password');
+$response = Request::new()->get('https://api.example.com/users/1')->send();
+
+// 1. The Standard Object (stdClass)
+$user = $response->getBody();
+echo $user->name;
+
+// 2. The Associative Array 
+$userArray = $response->getArray();
+echo $userArray['name'];
+
+// 3. The Raw String (Great for XML, CSV, or custom parsing)
+$raw = $response->getRawBody();
 ```
 
-##### Using the mashape key for their services (you need to get the key first)
+### Status Helpers (Brand New!!)
 
 ```php
-// Mashape auth
-Niduxrest\Request::setMashapeKey('<mashape_key>');
+if ($response->isSuccessful()) { // Validates HTTP Codes from 200-299
+    // Do something
+}
+
+if ($response->isClientError()) { // Validates HTTP Codes from 400-499
+    echo "Check your payload!";
+}
+
+if ($response->isServerError()) { // Validates HTTP Codes from 500+
+    echo "The external API is down.";
+}
+
+// Or get the exact code/headers
+$response->getCode();    // e.g., 200
+$response->getHeaders(); // Returns array of headers
 ```
 
-The third parameter, which is a bitmask, will Niduxrest which HTTP authentication method(s) you want it to use for your
-proxy authentication.
-
-If more than one bit is set, Niduxrest *(at PHP's libcurl level)* will first query the site to see what authentication
-methods it supports and then pick the best one you allow it to use. *For some methods, this will induce an extra network
-round-trip.*
-
-**Supported Methods**
-
-| Method                                                                                                           | Description                                                                                                                                                                                 |
-|------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `CURLAUTH_BASIC`                                                                                                 | HTTP Basic authentication. This is the default choice                                                                                                                                       | 
-| `CURLAUTH_DIGEST`                                                                                                | HTTP Digest authentication. as defined in [RFC 2617](http://www.ietf.org/rfc/rfc2617.txt)                                                                                                   | 
-| `CURLAUTH_DIGEST_IE`                                                                                             | HTTP Digest authentication with an IE flavor. *The IE flavor is simply that libcurl will use a                                                                                              |
-| special "quirk" that IE is known to have used before version 7 and that some servers require the client to use.* |                                                                                                                                                                                             |
-| `CURLAUTH_NEGOTIATE`                                                                                             | HTTP Negotiate (SPNEGO) authentication. as defined in [RFC 4559](http://www.ietf.org/rfc/rfc4559.txt)                                                                                       |
-| `CURLAUTH_NTLM`                                                                                                  | HTTP NTLM authentication. A proprietary protocol invented and used by Microsoft.                                                                                                            |
-| `CURLAUTH_NTLM_WB`                                                                                               | NTLM delegating to winbind helper. Authentication is performed by a separate binary application. *                                                                                          |
-| see [libcurl docs](http://curl.haxx.se/libcurl/c/CURLOPT_HTTPAUTH.html) for more info*                           |                                                                                                                                                                                             |
-| `CURLAUTH_ANY`                                                                                                   | This is a convenience macro that sets all bits and thus makes libcurl pick any it finds suitable. libcurl will automatically select the one it finds most secure.                           |
-| `CURLAUTH_ANYSAFE`                                                                                               | This is a convenience macro that sets all bits except Basic and thus makes libcurl pick any it finds suitable. libcurl will automatically select the one it finds most secure.              |
-| `CURLAUTH_ONLY`                                                                                                  | This is a meta symbol. OR this value together with a single specific auth value to force libcurl to probe for un-restricted auth and if not, only that single auth algorithm is acceptable. |
-
-```php
-// custom auth method
-Niduxrest\Request::setProxyAuthentication('username', 'password', CURLAUTH_DIGEST);
-```
-
-Previous versions of **Niduxrest** support *Basic Authentication* by providing the `username` and `password` arguments:
-
-```php
-$response = Niduxrest\Request::get('http://mockbin.com/request', null, null, 'username', 'password');
-```
-
-**This has been deprecated, and will be completely removed in `v.2.0` please use the `Niduxrest\Request::auth()`
-method instead**
-
-### Cookies
-
-Set a cookie string to specify the contents of a cookie header. Multiple cookies are separated with a semicolon followed
-by a space (e.g., "fruit=apple; colour=red")
-
-```php
-Niduxrest\Request::setCookie($cookie)
-```
-
-Set a cookie file path for enabling cookie reading and storing cookies across multiple sequence of requests.
-
-```php
-Niduxrest\Request::setCookieFile($cookieFile)
-```
-
-`$cookieFile` must be a correct path with write permission.
-
-### Request Object
-
-```php
-Niduxrest\Request::get($url, $headers = [], $parameters = null)
-Niduxrest\Request::post($url, $headers = [], $body = null)
-Niduxrest\Request::put($url, $headers = [], $body = null)
-Niduxrest\Request::patch($url, $headers = [], $body = null)
-Niduxrest\Request::delete($url, $headers = [], $body = null)
-```
-
-- `url` - Endpoint, address, or uri to be acted upon and requested information from.
-- `headers` - Request Headers as associative array or object
-- `body` - Request Body as associative array or object
-
-You can send a request with any [standard](http://www.iana.org/assignments/http-methods/http-methods.xhtml) or custom
-HTTP Method present on the Method enum:
-
-```php
-Niduxrest\Request::send(Niduxrest\Enum\Method::LINK, $url, $headers = [], $body);
-Niduxrest\Request::send(Niduxrest\Enum\Method::CHECKOUT, $url, $headers = [], $body);
-Niduxrest\Request::send(Niduxrest\Enum\Method::HEAD, $url, $headers = [], $body);
-Niduxrest\Request::send(Niduxrest\Enum\Method::LOCK, $url, $headers = [], $body);
-```
-
-### Response Object
-
-Upon recieving a response, Niduxrest returns a Response Object, this object will have the following getters available.
-
-- `getCode()` - HTTP Response Status Code (Example `200`)
-- `getHeaders()` - HTTP Response Headers
-- `getBody()` - Parsed response body where applicable, for example JSON responses are parsed to Objects / Associative Arrays.
-- `getRawBody()` - Un-parsed response body
+---
 
 ### Advanced Configuration
 
-You can set some advanced configuration to tune Niduxrest-PHP:
+Because the client is fluent, all configurations are isolated strictly to the instance being executed.
 
-#### Custom JSON Decode Flags
-
-Niduxrest uses PHP's [JSON Extension](http://php.net/manual/en/book.json.php) for automatically decoding JSON responses.
-sometime you may want to return associative arrays, limit the depth of recursion, or use any of
-the [customization flags](http://php.net/manual/en/json.constants.php).
-
-To do so, simply set the desired options using the `setJsonOpts` request method:
-
+#### Authentication
 ```php
-Niduxrest\Request::setJsonOpts(true, 512, JSON_NUMERIC_CHECK & JSON_FORCE_OBJECT & JSON_UNESCAPED_SLASHES);
+// Bearer Token
+Request::new()->withBearerToken('your-jwt-token')->...
+
+// Basic Auth
+Request::new()->withBasicAuth('username', 'password')->...
 ```
 
-#### Timeout
-
-You can set a custom timeout value (in **seconds**):
+#### Proxies and Cookies
 
 ```php
-Niduxrest\Request::setTimeout(5); // 5s timeout
+// Route traffic through a proxy
+Request::new()
+    ->withProxy('10.10.10.1', 8080)
+    ->withProxyAuth('user', 'pass')
+    ->...
+
+// Read/Store cookies across requests (Session persistence)
+Request::new()->withCookieFile('/path/to/cookie.txt')->...
+
+// Send a manual cookie string
+Request::new()->withCookie('fruit=apple; session=123')->...
 ```
 
-#### Proxy
+#### Custom cURL Options (The Escape Hatch)
 
-Set the proxy to use for the upcoming request.
-
-you can also set the proxy type to be one of `CURLPROXY_HTTP`, `CURLPROXY_HTTP_1_0`, `CURLPROXY_SOCKS4`
-, `CURLPROXY_SOCKS5`, `CURLPROXY_SOCKS4A`, and `CURLPROXY_SOCKS5_HOSTNAME`.
-
-*check the [cURL docs](http://curl.haxx.se/libcurl/c/CURLOPT_PROXYTYPE.html) for more info*.
+If you need to define specific cURL behaviors that don't have a dedicated helper, you can inject native `CURLOPT_*`
+constants directly into the fluent chain:
 
 ```php
-// quick setup with default port: 1080
-Niduxrest\Request::setProxy('10.10.10.1');
-
-// custom port and proxy type
-Niduxrest\Request::setProxy('10.10.10.1', 8080, CURLPROXY_HTTP);
-
-// enable tunneling
-Niduxrest\Request::setProxy('10.10.10.1', 8080, CURLPROXY_HTTP, true);
+Request::new()
+    ->get('https://api.example.com')
+    ->withCurlOption(CURLOPT_ENCODING, 'gzip')
+    ->withCurlOption(CURLOPT_TCP_KEEPALIVE, 1)
+    ->send();
 ```
 
-##### Proxy Authenticaton
+##### Security (SSL) and Hostname Verification
 
-Passing a username, password *(optional)*, defaults to Basic Authentication:
+SSL verification is **enabled by default**. If you need to hit a local testing server with self-signed certificates:
 
 ```php
-// basic auth
-Niduxrest\Request::setProxyAuthentication('username', 'password');
+Request::new()
+    ->get('https://local.dev.nidux.com')
+    ->setPeerVerification(false)
+    ->setHostVerification(false)
+    ->send();
 ```
 
-The third parameter, which is a bitmask, will Niduxrest which HTTP authentication method(s) you want it to use for your
-proxy authentication.
+## Contributing & Support
 
-If more than one bit is set, Niduxrest *(at PHP's libcurl level)* will first query the site to see what authentication
-methods it supports and then pick the best one you allow it to use. *For some methods, this will induce an extra network
-round-trip.*
+NiduxRest is still evolving driven by the needs of the whole Nidux ecosystem, but it is proudly open-sourced to give
+back to the PHP community. We are absolutely open to improvements, bug fixes, and new ideas!
 
-See [Authentication](#authentication) for more details on methods supported.
+If you want to contribute to this project:
 
-```php
-// basic auth
-Niduxrest\Request::setProxyAuthentication('username', 'password', CURLAUTH_DIGEST);
-```
+* **Found a bug?** Please open an [Issue](https://github.com/nidux/niduxrest/issues) on GitHub with a clear description
+  of the problem and, if possible, the steps to reproduce it.
+* **Have a feature request or improvement?** Feel free to open an Issue to discuss it.
+* **Want to write some code?** We welcome Pull Requests! Just make sure to run the PHPUnit test suite before submitting
+  your PR to ensure everything stays green.
 
-#### Default Request Headers
-
-You can set default headers that will be sent on every request:
-
-```php
-Niduxrest\Request::setIndidualDefaultHeader('Header1', 'Value1');
-Niduxrest\Request::setIndidualDefaultHeader('Header2', 'Value2');
-```
-
-You can set default headers in bulk by passing an array:
-
-```php
-Niduxrest\Request::setDefaultHeaders([
-    'Header1' => 'Value1',
-    'Header2' => 'Value2'
-]);
-```
-
-You can clear the default headers anytime with:
-
-```php
-Niduxrest\Request::clearDefaultHeaders();
-```
-
-#### Default cURL Options
-
-You can set default [cURL options](http://php.net/manual/en/function.curl-setopt.php) that will be sent on every
-request:
-
-```php
-Niduxrest\Request::setIndividualCurlOpt(CURLOPT_COOKIE, 'foo=bar');
-```
-
-You can set options bulk by passing an array:
-
-```php
-Niduxrest\Request::setCurlOpts([
-    CURLOPT_COOKIE => 'foo=bar'
-]);
-```
-
-You can clear the default options anytime with:
-
-```php
-Niduxrest\Request::clearCurlOpts();
-```
-
-#### SSL validation
-
-You can explicitly enable or disable SSL certificate validation when consuming an SSL protected endpoint:
-
-```php
-Niduxrest\Request::setVerifyPeer(false); // Disables SSL cert validation
-```
-
-By default is `true`.
-
-#### Utility Methods
-
-```php
-// alias for `curl_getinfo`
-Niduxrest\Request::getInfo()
-
-// returns internal cURL handle
-Niduxrest\Request::getCurlHandle()
-```
-
+Let's build a better, faster HTTP client together.

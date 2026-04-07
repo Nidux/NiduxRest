@@ -1,6 +1,6 @@
 <?php
 
-namespace Niduxrest;
+namespace Nidux\Rest;
 
 class Exception extends \Exception
 {

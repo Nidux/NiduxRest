@@ -1,46 +1,39 @@
 <?php
 
-namespace Niduxrest\Request;
+namespace Nidux\Rest\Request;
 
 use CURLFile;
-use Niduxrest\Exception as Exception;
-use Niduxrest\Request as Request;
+use JsonException;
+use Nidux\Rest\Exception as Exception;
+use Nidux\Rest\Request as Request;
 use Traversable;
 
 class Body
 {
     /**
-     * Prepares a file for upload. To be used inside the parameters declaration for a request.
+     * Prepares a file for upload. To be used inside the parameter declaration for a request.
      * @param string $filename The file path
      * @param string $mimetype MIME type
      * @param string $postname the file name
      * @return string|CURLFile
+     * @throws Exception
      */
     public static function prepareFile(string $filename, string $mimetype = '', string $postname = ''): CURLFile|string
     {
-        if (class_exists('CURLFile')) {
-            return new CURLFile($filename, $mimetype, $postname);
+        if (!file_exists($filename)) {
+            throw new Exception("File not found: $filename");
         }
-
-        if (function_exists('curl_file_create')) {
-            return curl_file_create($filename, $mimetype, $postname);
-        }
-
-        return sprintf('@%s;filename=%s;type=%s', $filename, $postname ?: basename($filename), $mimetype);
+        return new CURLFile($filename, $mimetype, $postname);
     }
 
     /**
      * @param $data
      * @return false|string
-     * @throws Exception
+     * @throws JsonException
      */
     public static function prepareJson($data): bool|string
     {
-        if (!function_exists('json_encode')) {
-            throw new Exception('JSON Extension not available');
-        }
-
-        return json_encode($data);
+        return json_encode($data, JSON_THROW_ON_ERROR);
     }
 
     /**
@@ -58,10 +51,10 @@ class Body
 
     /**
      * @param $data
-     * @param $files
+     * @param array|bool $files
      * @return array
      */
-    public static function prepareMultiPart($data, $files = false): array
+    public static function prepareMultiPart($data, array|bool|object $files = false): array
     {
         if (is_object($data)) {
             return get_object_vars($data);
@@ -81,46 +74,47 @@ class Body
     }
 
     /**
-     * @deprecated Use prepareFile instead
      * @param string $filename
      * @param string $mimetype
      * @param string $postname
-     * @return void
+     * @return string|CURLFile
+     * @throws Exception
+     * @deprecated Use prepareFile instead
      */
-    public static function File(string $filename, string $mimetype = '', string $postname = ''): void
+    public static function File(string $filename, string $mimetype = '', string $postname = ''): string|CURLFile
     {
-        self::prepareFile($filename, $mimetype = '', $postname = '');
+        return self::prepareFile($filename, $mimetype = '', $postname = '');
     }
 
     /**
-     * @deprecated Use prepareJson instead
      * @param $data
      * @return false|string
-     * @throws Exception
+     * @throws JsonException
+     * @deprecated Use prepareJson instead
      */
     public static function Json($data): bool|string
     {
-        self::prepareJson($data);
+        return self::prepareJson($data);
     }
 
     /**
-     * @deprecated Use prepareForm instead
      * @param $data
-     * @return void
+     * @return mixed
+     * @deprecated Use prepareForm instead
      */
-    public static function Form($data)
+    public static function Form($data): mixed
     {
-        self::prepareForm($data);
+        return self::prepareForm($data);
     }
 
     /**
-     * @deprecated Use prepareMultipart instead
      * @param $data
      * @param $files
-     * @return array     *
+     * @return array
+     * @deprecated Use prepareMultipart instead
      */
     protected static function MultiPart($data, $files = false): array
     {
-        self::prepareMultiPart($data, $files);
+        return self::prepareMultiPart($data, $files);
     }
 }

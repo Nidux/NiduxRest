@@ -1,6 +1,6 @@
 <?php
 
-namespace Niduxrest;
+namespace Nidux\Rest;
 
 class Response
 {
@@ -9,32 +9,51 @@ class Response
     private mixed $body;
     private array $headers;
 
+
     /**
+     * Constructor for the Response object
      * @param int $code response code of the cURL request
      * @param string $raw_body the raw body of the cURL response
      * @param string $headers raw header string from cURL response
-     * @param array $overrideJsonOpts arguments to pass to json_decode function
      */
-    public function __construct(int $code, string $raw_body, string $headers, array $overrideJsonOpts = [])
+    public function __construct(int $code, string $raw_body, string $headers)
     {
         $this->code = $code;
         $this->headers = $this->parseHeaders($headers);
         $this->raw_body = $raw_body;
         $this->body = $raw_body;
-
-        //Take the static var just to honor any global definitions
-        $overrideJsonOpts = (empty($overrideJsonOpts)) ? Request::getJsonOpts() : [];
-        // make sure raw_body is the first argument
-        array_unshift($overrideJsonOpts, $raw_body);
-
-        if (function_exists('json_decode')) {
-            $json = call_user_func_array('json_decode', $overrideJsonOpts);
-
+        if (!empty($raw_body)) {
+            $json = json_decode($raw_body, false, 512, 0);
             if (json_last_error() === JSON_ERROR_NONE) {
                 $this->body = $json;
             }
         }
     }
+
+    /**
+     * Checks if the request was successful based on HTTP CODES (200-299)
+     */
+    public function isSuccessful(): bool
+    {
+        return $this->code >= 200 && $this->code < 300;
+    }
+
+    /**
+     * Checks if there was a client error (400-499)
+     */
+    public function isClientError(): bool
+    {
+        return $this->code >= 400 && $this->code < 500;
+    }
+
+    /**
+     * Checks if there was a server error (500+)
+     */
+    public function isServerError(): bool
+    {
+        return $this->code >= 500;
+    }
+
 
     /**
      * if PECL_HTTP is not available use a fall back function
@@ -80,21 +99,55 @@ class Response
         }
     }
 
+    /**
+     * Gets the HTTP response code as an integer
+     * @return int
+     */
     public function getCode(): int
     {
         return $this->code;
     }
 
+
+    /**
+     * Gets the raw body of the response as a string
+     * @return string
+     */
     public function getRawBody(): string
     {
         return $this->raw_body;
     }
 
+
+    /**
+     * Gets the body of the response as a string or object
+     * @return mixed
+     */
     public function getBody(): mixed
     {
         return $this->body;
     }
 
+
+    /**
+     * Gets a decoded associative array from the response body
+     * @return array
+     */
+    public function getArray(): array
+    {
+        if (!empty($this->raw_body)) {
+            $json = json_decode($this->raw_body, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $json;
+            }
+        }
+        return (array)$this->body;
+    }
+
+    /**
+     * Gets the raw headers of the response as an associative array
+     * @return array
+     */
     public function getHeaders(): array
     {
         return $this->headers;
