@@ -86,6 +86,19 @@ class Request
     }
 
     /**
+     * Add multiple custom headers to the request.
+     * @param array $headers
+     * @return self
+     */
+    public function withHeaders(array $headers): self
+    {
+        foreach ($headers as $key => $value) {
+            $this->withHeader($key, $value);
+        }
+        return $this;
+    }
+
+    /**
      * Set the HTTP method to POST and target the given URL.
      * @param string $url
      * @return $this
