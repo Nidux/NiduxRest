@@ -379,6 +379,7 @@ class Request
             CURLOPT_SSL_VERIFYPEER => $this->verifyTargetPeer,
             CURLOPT_SSL_VERIFYHOST => $this->verifyTargetHost,
             CURLOPT_HTTPHEADER => $this->getCompiledHeaders(),
+            CURLOPT_ENCODING => "",
         ];
 
         if ($this->body !== null && $this->method !== Method::GET) {

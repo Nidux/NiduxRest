@@ -25,6 +25,7 @@ class RequestTest extends TestCase
         $this->assertStringContainsString('foo=bar', $body->headers->cookie);
     }
 
+
     public function testTimeoutFail(): void
     {
         $this->expectException(Exception::class);
@@ -100,6 +101,18 @@ class RequestTest extends TestCase
     {
         $response = Request::new()
             ->to('https://postman-echo.com/get?name=Mark')
+            ->withHeader('Accept', 'application/json')
+            ->withQuery(['nick' => 'thefosk'])
+            ->send();
+
+        $this->assertEquals(200, $response->getCode());
+        $this->assertEquals('Mark', $response->getBody()->args->name);
+        $this->assertEquals('thefosk', $response->getBody()->args->nick);
+    }
+
+    public function testGetInvalidObjectCall(): void
+    {
+        $response = Request::post('https://postman-echo.com/get?name=Mark')
             ->withHeader('Accept', 'application/json')
             ->withQuery(['nick' => 'thefosk'])
             ->send();
