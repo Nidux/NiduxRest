@@ -128,6 +128,10 @@ class Response
         return $this->body;
     }
 
+    public function getContentType(): string
+    {
+        return $this->headers['content-type'] ?? '';
+    }
 
     /**
      * Gets a decoded associative array from the response body
