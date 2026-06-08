@@ -128,6 +128,10 @@ class Response
         return $this->body;
     }
 
+    /**
+     * Helper method, just to quickly get the content type from the headers
+     * @return string
+     */
     public function getContentType(): string
     {
         return $this->headers['content-type'] ?? '';

@@ -31,6 +31,7 @@ class ResponseTest extends TestCase
         $this->assertNotEmpty($headers);
         $this->assertIsArray($headers);
         $this->assertEquals('application/json; charset=utf-8', $headers['content-type']);
+        $this->assertEquals('application/json; charset=utf-8', $response->getContentType());
     }
 
     public function testStatusHelpers(): void
