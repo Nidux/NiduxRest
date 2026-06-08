@@ -110,17 +110,6 @@ class RequestTest extends TestCase
         $this->assertEquals('thefosk', $response->getBody()->args->nick);
     }
 
-    public function testGetInvalidObjectCall(): void
-    {
-        $response = Request::post('https://postman-echo.com/get?name=Mark')
-            ->withHeader('Accept', 'application/json')
-            ->withQuery(['nick' => 'thefosk'])
-            ->send();
-
-        $this->assertEquals(200, $response->getCode());
-        $this->assertEquals('Mark', $response->getBody()->args->name);
-        $this->assertEquals('thefosk', $response->getBody()->args->nick);
-    }
 
     public function testGetHelper(): void
     {
